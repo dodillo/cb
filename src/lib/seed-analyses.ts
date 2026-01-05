@@ -2,7 +2,6 @@ import { supabaseAdmin } from "./supabase"
 import { v4 as uuidv4 } from "uuid"
 
 export async function seedAnalyses() {
-  // First, get some users to associate with the analyses
   const { data: users, error: usersError } = await supabaseAdmin.from("users").select("id").limit(4)
 
   if (usersError) {
@@ -15,15 +14,14 @@ export async function seedAnalyses() {
     return
   }
 
-  // Sample analyses data
   const analyses = [
     {
       id: uuidv4(),
-      title: "Analyse des écarts budgétaires T1 2023",
-      description: "Comparaison des valeurs budgétées et réalisées pour le premier trimestre 2023",
-      type: "ecarts",
+      title: "Q1 Variance Review",
+      description: "Plan vs. actual variance review for the first quarter.",
+      type: "variance",
       user_id: users[0].id,
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       data: {
         summary: {
           totalBudget: 120000,
@@ -32,9 +30,9 @@ export async function seedAnalyses() {
           variancePercent: -4.17,
         },
         details: [
-          { category: "Ventes", budget: 50000, actual: 48000, variance: -2000, variancePercent: -4 },
+          { category: "Revenue", budget: 50000, actual: 48000, variance: -2000, variancePercent: -4 },
           { category: "Marketing", budget: 20000, actual: 22000, variance: 2000, variancePercent: 10 },
-          { category: "Opérations", budget: 35000, actual: 32000, variance: -3000, variancePercent: -8.57 },
+          { category: "Operations", budget: 35000, actual: 32000, variance: -3000, variancePercent: -8.57 },
           { category: "Administration", budget: 15000, actual: 13000, variance: -2000, variancePercent: -13.33 },
         ],
       },
@@ -43,15 +41,15 @@ export async function seedAnalyses() {
     },
     {
       id: uuidv4(),
-      title: "Optimisation des prix produits A et B",
-      description: "Simulation d'optimisation des prix pour maximiser la marge",
-      type: "optimisation",
+      title: "Price Optimization Sprint",
+      description: "Modeling optimized pricing to maximize contribution margin.",
+      type: "optimization",
       user_id: users[1].id,
-      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       data: {
         products: [
           {
-            name: "Produit A",
+            name: "Segment A",
             currentPrice: 120,
             optimalPrice: 135,
             elasticity: -1.2,
@@ -62,7 +60,7 @@ export async function seedAnalyses() {
             revenueChange: -1.0,
           },
           {
-            name: "Produit B",
+            name: "Segment B",
             currentPrice: 85,
             optimalPrice: 75,
             elasticity: -1.8,
@@ -85,38 +83,38 @@ export async function seedAnalyses() {
     },
     {
       id: uuidv4(),
-      title: "Tendances des coûts 2022-2023",
-      description: "Analyse de l'évolution des coûts sur les 12 derniers mois",
-      type: "tendances",
+      title: "Cost Trend Analysis",
+      description: "Twelve-month cost trend analysis across operating categories.",
+      type: "trend",
       user_id: users[2].id,
-      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
+      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       data: {
         timeSeries: [
-          { month: "Jan 2022", matériaux: 12000, maindOeuvre: 18000, fraisGénéraux: 8000 },
-          { month: "Fév 2022", matériaux: 12500, maindOeuvre: 18200, fraisGénéraux: 8100 },
-          { month: "Mar 2022", matériaux: 13000, maindOeuvre: 18500, fraisGénéraux: 8200 },
-          { month: "Avr 2022", matériaux: 13200, maindOeuvre: 18800, fraisGénéraux: 8300 },
-          { month: "Mai 2022", matériaux: 13500, maindOeuvre: 19000, fraisGénéraux: 8400 },
-          { month: "Juin 2022", matériaux: 14000, maindOeuvre: 19200, fraisGénéraux: 8500 },
-          { month: "Juil 2022", matériaux: 14500, maindOeuvre: 19500, fraisGénéraux: 8600 },
-          { month: "Août 2022", matériaux: 15000, maindOeuvre: 19800, fraisGénéraux: 8700 },
-          { month: "Sep 2022", matériaux: 15500, maindOeuvre: 20000, fraisGénéraux: 8800 },
-          { month: "Oct 2022", matériaux: 16000, maindOeuvre: 20200, fraisGénéraux: 8900 },
-          { month: "Nov 2022", matériaux: 16500, maindOeuvre: 20500, fraisGénéraux: 9000 },
-          { month: "Déc 2022", matériaux: 17000, maindOeuvre: 21000, fraisGénéraux: 9100 },
+          { month: "Jan 2024", materials: 12000, labor: 18000, overhead: 8000 },
+          { month: "Feb 2024", materials: 12500, labor: 18200, overhead: 8100 },
+          { month: "Mar 2024", materials: 13000, labor: 18500, overhead: 8200 },
+          { month: "Apr 2024", materials: 13200, labor: 18800, overhead: 8300 },
+          { month: "May 2024", materials: 13500, labor: 19000, overhead: 8400 },
+          { month: "Jun 2024", materials: 14000, labor: 19200, overhead: 8500 },
+          { month: "Jul 2024", materials: 14500, labor: 19500, overhead: 8600 },
+          { month: "Aug 2024", materials: 15000, labor: 19800, overhead: 8700 },
+          { month: "Sep 2024", materials: 15500, labor: 20000, overhead: 8800 },
+          { month: "Oct 2024", materials: 16000, labor: 20200, overhead: 8900 },
+          { month: "Nov 2024", materials: 16500, labor: 20500, overhead: 9000 },
+          { month: "Dec 2024", materials: 17000, labor: 21000, overhead: 9100 },
         ],
         trends: {
-          matériaux: {
+          materials: {
             growthRate: 41.67,
             averageMonthlyGrowth: 3.47,
             trend: "increasing",
           },
-          maindOeuvre: {
+          labor: {
             growthRate: 16.67,
             averageMonthlyGrowth: 1.39,
             trend: "increasing",
           },
-          fraisGénéraux: {
+          overhead: {
             growthRate: 13.75,
             averageMonthlyGrowth: 1.15,
             trend: "increasing",
@@ -128,29 +126,29 @@ export async function seedAnalyses() {
     },
     {
       id: uuidv4(),
-      title: "Distribution des ventes par région",
-      description: "Répartition des ventes par région et par catégorie de produits",
+      title: "Regional Revenue Mix",
+      description: "Revenue distribution by region and product category.",
       type: "distribution",
       user_id: users[3].id,
-      created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 2 weeks ago
+      created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
       data: {
         regions: [
-          { name: "Nord", value: 125000, percent: 25 },
-          { name: "Sud", value: 150000, percent: 30 },
-          { name: "Est", value: 100000, percent: 20 },
-          { name: "Ouest", value: 125000, percent: 25 },
+          { name: "North", value: 125000, percent: 25 },
+          { name: "South", value: 150000, percent: 30 },
+          { name: "East", value: 100000, percent: 20 },
+          { name: "West", value: 125000, percent: 25 },
         ],
         categories: [
-          { name: "Électronique", value: 200000, percent: 40 },
-          { name: "Mobilier", value: 150000, percent: 30 },
-          { name: "Vêtements", value: 100000, percent: 20 },
-          { name: "Alimentation", value: 50000, percent: 10 },
+          { name: "Software", value: 200000, percent: 40 },
+          { name: "Services", value: 150000, percent: 30 },
+          { name: "Analytics", value: 100000, percent: 20 },
+          { name: "Enablement", value: 50000, percent: 10 },
         ],
         crossAnalysis: [
-          { region: "Nord", électronique: 50000, mobilier: 37500, vêtements: 25000, alimentation: 12500 },
-          { region: "Sud", électronique: 60000, mobilier: 45000, vêtements: 30000, alimentation: 15000 },
-          { region: "Est", électronique: 40000, mobilier: 30000, vêtements: 20000, alimentation: 10000 },
-          { region: "Ouest", électronique: 50000, mobilier: 37500, vêtements: 25000, alimentation: 12500 },
+          { region: "North", software: 50000, services: 37500, analytics: 25000, enablement: 12500 },
+          { region: "South", software: 60000, services: 45000, analytics: 30000, enablement: 15000 },
+          { region: "East", software: 40000, services: 30000, analytics: 20000, enablement: 10000 },
+          { region: "West", software: 50000, services: 37500, analytics: 25000, enablement: 12500 },
         ],
       },
       status: "completed",
@@ -158,7 +156,6 @@ export async function seedAnalyses() {
     },
   ]
 
-  // Insert analyses
   const { error: analysesError } = await supabaseAdmin.from("analyses").upsert(analyses)
 
   if (analysesError) {
@@ -166,19 +163,18 @@ export async function seedAnalyses() {
     return
   }
 
-  // Add tags to analyses
   const analysesTags = [
+    { analysis_id: analyses[0].id, tag: "variance" },
     { analysis_id: analyses[0].id, tag: "budget" },
-    { analysis_id: analyses[0].id, tag: "écarts" },
-    { analysis_id: analyses[0].id, tag: "trimestre" },
-    { analysis_id: analyses[1].id, tag: "prix" },
-    { analysis_id: analyses[1].id, tag: "optimisation" },
-    { analysis_id: analyses[1].id, tag: "produits" },
-    { analysis_id: analyses[2].id, tag: "coûts" },
-    { analysis_id: analyses[2].id, tag: "tendances" },
-    { analysis_id: analyses[2].id, tag: "évolution" },
-    { analysis_id: analyses[3].id, tag: "ventes" },
-    { analysis_id: analyses[3].id, tag: "régions" },
+    { analysis_id: analyses[0].id, tag: "quarter" },
+    { analysis_id: analyses[1].id, tag: "pricing" },
+    { analysis_id: analyses[1].id, tag: "optimization" },
+    { analysis_id: analyses[1].id, tag: "margin" },
+    { analysis_id: analyses[2].id, tag: "costs" },
+    { analysis_id: analyses[2].id, tag: "trends" },
+    { analysis_id: analyses[2].id, tag: "operations" },
+    { analysis_id: analyses[3].id, tag: "revenue" },
+    { analysis_id: analyses[3].id, tag: "regions" },
     { analysis_id: analyses[3].id, tag: "distribution" },
   ]
 

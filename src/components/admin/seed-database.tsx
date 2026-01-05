@@ -26,10 +26,10 @@ export function SeedDatabase() {
       if (response.ok) {
         setSuccess(true)
       } else {
-        setError(data.message || "Une erreur est survenue lors de l'initialisation de la base de données.")
+        setError(data.message || "Database initialization failed.")
       }
     } catch (err) {
-      setError("Une erreur est survenue lors de l'initialisation de la base de données.")
+      setError("Database initialization failed.")
       console.error("Error seeding database:", err)
     } finally {
       setLoading(false)
@@ -48,10 +48,10 @@ export function SeedDatabase() {
       if (response.ok) {
         setAnalysesSuccess(true)
       } else {
-        setAnalysesError(data.message || "Une erreur est survenue lors de l'initialisation des analyses.")
+        setAnalysesError(data.message || "Analysis initialization failed.")
       }
     } catch (err) {
-      setAnalysesError("Une erreur est survenue lors de l'initialisation des analyses.")
+      setAnalysesError("Analysis initialization failed.")
       console.error("Error seeding analyses:", err)
     } finally {
       setAnalysesLoading(false)
@@ -62,73 +62,68 @@ export function SeedDatabase() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Initialisation de la base de données</CardTitle>
+          <CardTitle>Initialize core data</CardTitle>
           <CardDescription>
-            Initialiser la base de données avec des données de test pour les produits, budgets, coûts et comptes
-            comptables.
+            Seed the workspace with baseline products, budgets, costs, and accounting entries.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {success && (
-            <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+            <Alert className="mb-4 bg-emerald-50 text-emerald-800 border-emerald-200">
               <CheckCircle2 className="h-4 w-4" />
-              <AlertTitle>Succès</AlertTitle>
-              <AlertDescription>La base de données a été initialisée avec succès.</AlertDescription>
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>Core data has been initialized successfully.</AlertDescription>
             </Alert>
           )}
           {error && (
-            <Alert className="mb-4 bg-red-50 text-red-800 border-red-200" variant="destructive">
+            <Alert className="mb-4 bg-rose-50 text-rose-800 border-rose-200" variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Erreur</AlertTitle>
+              <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           <p className="text-sm text-muted-foreground">
-            Cette action va créer des données de test dans votre base de données Supabase. Cela inclut des produits, des
-            budgets, des coûts et des écritures comptables.
+            This action will overwrite existing data with baseline operational records.
           </p>
         </CardContent>
         <CardFooter>
           <Button onClick={handleSeedDatabase} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <Database className={`mr-2 h-4 w-4 ${loading ? "hidden" : ""}`} />
-            {loading ? "Initialisation en cours..." : "Initialiser la base de données"}
+            {loading ? "Initializing..." : "Initialize data"}
           </Button>
         </CardFooter>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Initialisation des analyses</CardTitle>
-          <CardDescription>
-            Initialiser la base de données avec des données de test pour les analyses budgétaires.
-          </CardDescription>
+          <CardTitle>Initialize analysis library</CardTitle>
+          <CardDescription>Seed the workspace with baseline variance and optimization analyses.</CardDescription>
         </CardHeader>
         <CardContent>
           {analysesSuccess && (
-            <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+            <Alert className="mb-4 bg-emerald-50 text-emerald-800 border-emerald-200">
               <CheckCircle2 className="h-4 w-4" />
-              <AlertTitle>Succès</AlertTitle>
-              <AlertDescription>Les analyses ont été initialisées avec succès.</AlertDescription>
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>Analysis records have been initialized successfully.</AlertDescription>
             </Alert>
           )}
           {analysesError && (
-            <Alert className="mb-4 bg-red-50 text-red-800 border-red-200" variant="destructive">
+            <Alert className="mb-4 bg-rose-50 text-rose-800 border-rose-200" variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Erreur</AlertTitle>
+              <AlertTitle>Error</AlertTitle>
               <AlertDescription>{analysesError}</AlertDescription>
             </Alert>
           )}
           <p className="text-sm text-muted-foreground">
-            Cette action va créer des analyses de test dans votre base de données Supabase. Cela inclut des analyses
-            d'écarts, d'optimisation, de tendances et de distribution.
+            Creates variance, optimization, trend, and distribution analyses for baseline workflows.
           </p>
         </CardContent>
         <CardFooter>
           <Button onClick={handleSeedAnalyses} disabled={analysesLoading}>
             {analysesLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <Database className={`mr-2 h-4 w-4 ${analysesLoading ? "hidden" : ""}`} />
-            {analysesLoading ? "Initialisation en cours..." : "Initialiser les analyses"}
+            {analysesLoading ? "Initializing..." : "Initialize analyses"}
           </Button>
         </CardFooter>
       </Card>

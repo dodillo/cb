@@ -1,166 +1,204 @@
 import { NextResponse } from "next/server"
-import type { AIAnalysisRequest } from "@/lib/ai-service"
+import type { AIInsightRequest, AIInsightResponse } from "@/lib/ai-service"
 
-// Configuration de l'API OpenAI
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json()) as AIAnalysisRequest
+const toNumber = (value: unknown) => {
+  if (typeof value === "number") return value
+  if (typeof value === "string" && value.trim() !== "" && !Number.isNaN(Number(value))) {
+    return Number(value)
+  }
+  return 0
+}
 
-    if (!body.exerciceType || !body.data) {
-      return NextResponse.json({ error: "Les données de l'exercice sont requises" }, { status: 400 })
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value)
+
+const formatPercent = (value: number) =>
+  new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 }).format(value)
+
+const buildFallbackInsights = (request: AIInsightRequest): AIInsightResponse => {
+  const { scenarioType, inputs, scenarioTitle } = request
+
+  if (scenarioType === "variance") {
+    const plannedVolume = toNumber(inputs.plannedVolume)
+    const plannedPrice = toNumber(inputs.plannedPrice)
+    const actualVolume = toNumber(inputs.actualVolume)
+    const actualPrice = toNumber(inputs.actualPrice)
+    const unitCost = toNumber(inputs.unitCost)
+
+    const plannedRevenue = plannedVolume * plannedPrice
+    const actualRevenue = actualVolume * actualPrice
+    const variance = actualRevenue - plannedRevenue
+    const marginVariance = actualRevenue - actualVolume * unitCost - (plannedRevenue - plannedVolume * unitCost)
+
+    return {
+      executiveSummary: `${scenarioTitle} highlights a ${variance >= 0 ? "positive" : "negative"} revenue variance of ${formatCurrency(Math.abs(variance))}.`,
+      riskSignals: [
+        variance < 0 ? "Revenue shortfall versus plan." : "Revenue uplift driven by pricing or volume.",
+        marginVariance < 0 ? "Gross margin compression detected." : "Margin resilience maintained.",
+      ],
+      optimizationOpportunities: [
+        "Identify the primary driver between pricing and volume effects.",
+        "Isolate cost drivers with elevated variance exposure.",
+      ],
+      recommendations: [
+        "Reinforce pricing governance for high-variance segments.",
+        "Prioritize demand recovery actions in underperforming regions.",
+        "Launch a margin protection review with procurement and finance.",
+      ],
     }
+  }
 
-    if (!OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: "La clé API OpenAI n'est pas configurée. Veuillez contacter l'administrateur." },
-        { status: 500 },
-      )
+  if (scenarioType === "optimization") {
+    const currentPrice = toNumber(inputs.currentPrice)
+    const currentVolume = toNumber(inputs.currentVolume)
+    const elasticityRaw = toNumber(inputs.elasticity)
+    const elasticity = elasticityRaw > 0 ? -elasticityRaw : elasticityRaw || -2.2
+    const unitCost = toNumber(inputs.unitCost)
+    const fixedCost = toNumber(inputs.fixedCost)
+
+    const rawOptimalPrice = unitCost * (elasticity / (1 + elasticity))
+    const optimalPrice = Number.isFinite(rawOptimalPrice)
+      ? Math.max(unitCost * 1.05, Math.min(rawOptimalPrice, unitCost * 2.5))
+      : currentPrice
+    const optimalVolume = currentPrice > 0 ? currentVolume * Math.pow(optimalPrice / currentPrice, elasticity) : currentVolume
+    const currentProfit = currentPrice * currentVolume - unitCost * currentVolume - fixedCost
+    const optimalProfit = optimalPrice * optimalVolume - unitCost * optimalVolume - fixedCost
+    const uplift = optimalProfit - currentProfit
+
+    return {
+      executiveSummary: `${scenarioTitle} indicates a modeled profit uplift of ${formatCurrency(Math.abs(uplift))} at the optimized price point.`,
+      riskSignals: [
+        optimalPrice > currentPrice ? "Higher price points may reduce volume if elasticity is underestimated." : "Discounting risks margin erosion.",
+        "Demand elasticity assumptions require validation against recent sales data.",
+      ],
+      optimizationOpportunities: [
+        `Target price band around ${formatCurrency(optimalPrice)} for margin optimization.`,
+        "Segment pricing by channel to reduce volume volatility.",
+      ],
+      recommendations: [
+        "Run controlled price experiments with short feedback loops.",
+        "Align sales incentives to margin outcomes.",
+        "Monitor win-rate and churn signals during pricing transitions.",
+      ],
     }
+  }
 
-    const prompt = generatePrompt(body)
+  const currentRevenue = toNumber(inputs.currentRevenue)
+  const growthRate = toNumber(inputs.growthRate)
+  const grossMargin = toNumber(inputs.grossMargin)
+  const forecastRevenue = currentRevenue * (1 + growthRate)
 
-    // Appel à l'API OpenAI
-    const openaiResponse = await fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
-        max_tokens: 2000,
-      }),
-    })
-
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json()
-      console.error("Erreur OpenAI:", errorData)
-      return NextResponse.json(
-        { error: "Erreur lors de la communication avec OpenAI", details: errorData },
-        { status: 500 },
-      )
-    }
-
-    const openaiData = await openaiResponse.json()
-    const text = openaiData.choices[0].message.content
-
-    // Analyser la réponse pour extraire les informations structurées
-    const parsedResponse = parseAIResponse(text)
-
-    return NextResponse.json({
-      solution: parsedResponse,
-      rawResponse: text,
-    })
-  } catch (error: any) {
-    console.error("Erreur lors de l'analyse par l'IA:", error)
-
-    return NextResponse.json({ error: "Erreur lors de l'analyse par l'IA", details: error.message }, { status: 500 })
+  return {
+    executiveSummary: `${scenarioTitle} projects ${formatPercent(growthRate)} revenue growth to ${formatCurrency(forecastRevenue)}.`,
+    riskSignals: [
+      grossMargin < 0.35 ? "Gross margin target is below enterprise thresholds." : "Margin discipline remains within target range.",
+      "Growth assumptions require quarterly validation against pipeline coverage.",
+    ],
+    optimizationOpportunities: [
+      "Align capacity planning with projected demand growth.",
+      "Balance pricing and channel mix to protect margin.",
+    ],
+    recommendations: [
+      "Establish a quarterly re-forecast cadence.",
+      "Track pipeline velocity and conversion rates against the plan.",
+      "Coordinate with operations to secure supply for forecasted volume.",
+    ],
   }
 }
 
-function generatePrompt(request: AIAnalysisRequest): string {
-  const { exerciceType, exerciceTitle, exerciceDescription, data } = request
-
-  // Convertir les données en format texte
-  const dataText = Object.entries(data)
+const buildPrompt = (request: AIInsightRequest) => {
+  const { scenarioTitle, scenarioType, scenarioDescription, inputs } = request
+  const inputText = Object.entries(inputs)
     .map(([key, value]) => `${key}: ${value}`)
     .join("\n")
 
   return `
-Tu es un expert en gestion budgétaire et analyse financière. Tu dois résoudre l'exercice suivant:
+You are the Decision Support Engine for an enterprise finance platform.
+Evaluate the scenario and return actionable insights in a consulting tone.
+Use verbs like identify, evaluate, optimize, recommend. Avoid "exercise", "student", "classroom", "explain", "calculate".
+Return JSON only with the following keys:
+executiveSummary (string),
+riskSignals (array of strings),
+optimizationOpportunities (array of strings),
+recommendations (array of strings).
 
-TITRE DE L'EXERCICE: ${exerciceTitle}
-TYPE D'EXERCICE: ${exerciceType}
-DESCRIPTION: ${exerciceDescription}
+SCENARIO TITLE: ${scenarioTitle}
+SCENARIO TYPE: ${scenarioType}
+DESCRIPTION: ${scenarioDescription}
 
-DONNÉES:
-${dataText}
-
-INSTRUCTIONS:
-1. Analyse les données fournies pour cet exercice de ${exerciceType}.
-2. Résous l'exercice étape par étape en expliquant clairement ton raisonnement.
-3. Pour chaque calcul, indique la formule utilisée et le résultat obtenu.
-4. Fournis une conclusion qui résume les résultats principaux.
-5. Propose des recommandations basées sur ton analyse.
-
-FORMAT DE RÉPONSE:
-Présente ta réponse sous forme structurée avec les sections suivantes:
-- RÉSUMÉ: Un bref résumé de l'exercice et de l'approche utilisée.
-- ÉTAPES DE RÉSOLUTION: Liste numérotée des étapes avec formules et calculs.
-- CONCLUSION: Synthèse des résultats et leur signification.
-- RECOMMANDATIONS: Liste de recommandations pratiques basées sur l'analyse.
-
-Assure-toi que tes calculs sont précis et que tes explications sont claires et pédagogiques.
+INPUTS:
+${inputText}
 `
 }
 
-function parseAIResponse(text: string): any {
-  // Extraction du résumé
-  const summaryMatch = text.match(/RÉSUMÉ:(.+?)(?=ÉTAPES DE RÉSOLUTION:|$)/s)
-  const summary = summaryMatch ? summaryMatch[1].trim() : "Analyse complétée"
-
-  // Extraction des étapes
-  const stepsMatch = text.match(/ÉTAPES DE RÉSOLUTION:(.+?)(?=CONCLUSION:|$)/s)
-  const stepsText = stepsMatch ? stepsMatch[1].trim() : ""
-
-  // Extraction de la conclusion
-  const conclusionMatch = text.match(/CONCLUSION:(.+?)(?=RECOMMANDATIONS:|$)/s)
-  const conclusion = conclusionMatch ? conclusionMatch[1].trim() : ""
-
-  // Extraction des recommandations
-  const recommendationsMatch = text.match(/RECOMMANDATIONS:(.+?)$/s)
-  const recommendationsText = recommendationsMatch ? recommendationsMatch[1].trim() : ""
-
-  // Traitement des étapes
-  const stepRegex = /(\d+\.\s.+?)(?=\d+\.\s|$)/gs
-  const stepsMatches = stepsText.matchAll(stepRegex)
-  const steps = Array.from(stepsMatches).map((match) => {
-    const stepText = match[1].trim()
-    const titleMatch = stepText.match(/^(\d+\.\s.+?)(?=:|\n|$)/)
-    const title = titleMatch ? titleMatch[1].trim() : "Étape"
-
-    // Extraire la description (tout ce qui n'est pas le titre, un calcul ou un résultat)
-    let description = stepText.replace(title, "").trim()
-
-    // Extraire les calculs s'ils existent
-    const calculationMatch = description.match(/([A-Za-z0-9\s+\-*/$$=]+=[A-Za-z0-9\s+\-*/$$]+)/)
-    const calculation = calculationMatch ? calculationMatch[1].trim() : undefined
-
-    // Extraire le résultat s'il existe
-    const resultMatch = description.match(/Résultat:?\s*([0-9\s.,]+)/)
-    const result = resultMatch ? resultMatch[1].trim() : undefined
-
-    // Nettoyer la description
-    if (calculation) {
-      description = description.replace(calculation, "").trim()
-    }
-    if (resultMatch) {
-      description = description.replace(resultMatch[0], "").trim()
-    }
-
+const parseJsonResponse = (text: string): AIInsightResponse | null => {
+  const cleaned = text.trim().replace(/```json|```/g, "").trim()
+  try {
+    const parsed = JSON.parse(cleaned) as AIInsightResponse
     return {
-      title,
-      description,
-      calculation,
-      result,
+      executiveSummary: parsed.executiveSummary || "Executive summary not available.",
+      riskSignals: Array.isArray(parsed.riskSignals) ? parsed.riskSignals : [],
+      optimizationOpportunities: Array.isArray(parsed.optimizationOpportunities) ? parsed.optimizationOpportunities : [],
+      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+      rawResponse: text,
     }
-  })
+  } catch (error) {
+    return null
+  }
+}
 
-  // Traitement des recommandations
-  const recommendations = recommendationsText
-    .split(/\n-|\n\d+\./)
-    .map((rec) => rec.trim())
-    .filter((rec) => rec.length > 0)
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as AIInsightRequest
 
-  return {
-    summary,
-    steps,
-    conclusion,
-    recommendations,
+    if (!body.scenarioType || !body.inputs) {
+      return NextResponse.json({ error: "Scenario inputs are required." }, { status: 400 })
+    }
+
+    if (!GEMINI_API_KEY) {
+      return NextResponse.json(buildFallbackInsights(body))
+    }
+
+    const prompt = buildPrompt(body)
+
+    const geminiResponse = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 1200,
+        },
+      }),
+    })
+
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json()
+      console.error("Gemini error:", errorData)
+      return NextResponse.json(buildFallbackInsights(body))
+    }
+
+    const geminiData = await geminiResponse.json()
+    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    const parsed = parseJsonResponse(text)
+
+    if (!parsed) {
+      return NextResponse.json(buildFallbackInsights(body))
+    }
+
+    return NextResponse.json(parsed)
+  } catch (error: any) {
+    console.error("AI analysis error:", error)
+    return NextResponse.json({ error: "Unable to generate automated insights." }, { status: 500 })
   }
 }

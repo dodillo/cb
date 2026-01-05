@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,74 +8,86 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, FileDown, Pencil, Trash2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useBudgets } from "@/hooks/useBudgets"
+import type { BudgetSummary } from "@/types/finance"
 
-const initialBudgets = [
-  {
-    id: "1",
-    name: "Votre Budget 1",
-    type: "sales", // Choisissez parmi les types disponibles
-    period: "annual", // Choisissez la période
-    startDate: "2024-01-01", // Votre date de début
-    endDate: "2024-12-31", // Votre date de fin
-    amount: 250000, // Votre montant
-    progress: 15, // Votre progression
-    status: "active", // Statut du budget
-  },
-  // Ajoutez vos propres budgets
-]
+const getBudgetTypeName = (type: string) => {
+  const types: Record<string, string> = {
+    sales: "Revenue",
+    procurement: "Procurement",
+    production: "Production",
+    treasury: "Treasury",
+    investment: "Investment",
+    general: "Enterprise",
+    operating: "Operating",
+  }
+  return types[type] || type
+}
+
+const getPeriodName = (period: string) => {
+  const periods: Record<string, string> = {
+    monthly: "Monthly",
+    quarterly: "Quarterly",
+    annual: "Annual",
+  }
+  return periods[period] || period
+}
+
+const getStatusBadge = (status: BudgetSummary["status"]) => {
+  switch (status) {
+    case "active":
+      return <Badge className="bg-emerald-500">Active</Badge>
+    case "completed":
+      return <Badge className="bg-blue-500">Closed</Badge>
+    case "draft":
+      return <Badge className="bg-amber-500">Draft</Badge>
+    default:
+      return <Badge>{status}</Badge>
+  }
+}
 
 export function BudgetList() {
-  const [budgets, setBudgets] = useState(initialBudgets)
-  const [selectedBudget, setSelectedBudget] = useState<(typeof initialBudgets)[0] | null>(null)
+  const { data: budgets, isLoading, error, source } = useBudgets()
+  const [selectedBudget, setSelectedBudget] = useState<BudgetSummary | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
-  const handleDelete = (id: string) => {
-    setBudgets(budgets.filter((budget) => budget.id !== id))
-  }
+  const formattedBudgets = useMemo(
+    () =>
+      budgets.map((budget) => ({
+        ...budget,
+        displayAmount: budget.amount.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }),
+      })),
+    [budgets],
+  )
 
-  const viewDetails = (budget: (typeof initialBudgets)[0]) => {
+  const viewDetails = (budget: BudgetSummary) => {
     setSelectedBudget(budget)
     setIsDetailsOpen(true)
   }
 
-  const getBudgetTypeName = (type: string) => {
-    const types: Record<string, string> = {
-      sales: "Ventes",
-      procurement: "Approvisionnements",
-      production: "Production",
-      treasury: "Trésorerie",
-      investment: "Investissements",
-      general: "Général",
-    }
-    return types[type] || type
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Loading budgets...</div>
   }
 
-  const getPeriodName = (period: string) => {
-    const periods: Record<string, string> = {
-      monthly: "Mensuel",
-      quarterly: "Trimestriel",
-      annual: "Annuel",
-    }
-    return periods[period] || period
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-500">Actif</Badge>
-      case "completed":
-        return <Badge className="bg-blue-500">Terminé</Badge>
-      case "draft":
-        return <Badge className="bg-yellow-500">Brouillon</Badge>
-      default:
-        return <Badge>{status}</Badge>
-    }
+  if (!formattedBudgets.length) {
+    return (
+      <Alert>
+        <AlertDescription>No budgets available yet.</AlertDescription>
+      </Alert>
+    )
   }
 
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {budgets.map((budget) => (
+        {formattedBudgets.map((budget) => (
           <Card key={budget.id} className="overflow-hidden">
             <CardContent className="p-0">
               <div className="p-6">
@@ -87,30 +99,33 @@ export function BudgetList() {
                 </div>
                 <div className="text-sm text-muted-foreground mb-4">
                   <div>Type: {getBudgetTypeName(budget.type)}</div>
-                  <div>Période: {getPeriodName(budget.period)}</div>
-                  <div>Montant: {budget.amount.toLocaleString()}€</div>
+                  <div>Period: {getPeriodName(budget.period)}</div>
+                  <div>Amount: {budget.displayAmount}</div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Progression</span>
+                    <span>Execution</span>
                     <span>{budget.progress}%</span>
                   </div>
                   <Progress value={budget.progress} className="h-2" />
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  {source === "baseline" ? "Baseline mode" : "Live data"}
                 </div>
               </div>
               <div className="border-t p-3 bg-muted/50 flex justify-between">
                 <Button variant="ghost" size="sm" onClick={() => viewDetails(budget)}>
                   <Eye className="h-4 w-4 mr-1" />
-                  Détails
+                  Details
                 </Button>
                 <div className="flex space-x-1">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" disabled title="Requires write access">
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(budget.id)}>
+                  <Button variant="ghost" size="sm" disabled title="Requires write access">
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" disabled title="Export available in enterprise tier">
                     <FileDown className="h-4 w-4" />
                   </Button>
                 </div>
@@ -126,40 +141,40 @@ export function BudgetList() {
             <>
               <DialogHeader>
                 <DialogTitle>{selectedBudget.name}</DialogTitle>
-                <DialogDescription>Détails complets du budget</DialogDescription>
+                <DialogDescription>Budget detail view</DialogDescription>
               </DialogHeader>
 
               <Tabs defaultValue="overview" className="mt-4">
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="overview">Aperçu</TabsTrigger>
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="allocation">Allocation</TabsTrigger>
-                  <TabsTrigger value="progress">Progression</TabsTrigger>
+                  <TabsTrigger value="progress">Execution</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 mt-4">
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Type de budget</h4>
+                      <h4 className="text-sm font-medium mb-1">Budget type</h4>
                       <p>{getBudgetTypeName(selectedBudget.type)}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Période</h4>
+                      <h4 className="text-sm font-medium mb-1">Period</h4>
                       <p>{getPeriodName(selectedBudget.period)}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Date de début</h4>
+                      <h4 className="text-sm font-medium mb-1">Start date</h4>
                       <p>{new Date(selectedBudget.startDate).toLocaleDateString()}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Date de fin</h4>
+                      <h4 className="text-sm font-medium mb-1">End date</h4>
                       <p>{new Date(selectedBudget.endDate).toLocaleDateString()}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Montant total</h4>
-                      <p>{selectedBudget.amount.toLocaleString()}€</p>
+                      <h4 className="text-sm font-medium mb-1">Total allocation</h4>
+                      <p>{selectedBudget.amount.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Statut</h4>
+                      <h4 className="text-sm font-medium mb-1">Status</h4>
                       <p>{getStatusBadge(selectedBudget.status)}</p>
                     </div>
                   </div>
@@ -167,105 +182,62 @@ export function BudgetList() {
 
                 <TabsContent value="allocation">
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-3">Allocation du budget</h4>
+                    <h4 className="text-sm font-medium mb-3">Allocation overview</h4>
                     <div className="space-y-4">
-                      {selectedBudget.type === "sales" && (
-                        <>
-                          <div className="flex justify-between items-center">
-                            <span>Marketing</span>
-                            <span>75,000€ (30%)</span>
-                          </div>
-                          <Progress value={30} className="h-2" />
-
-                          <div className="flex justify-between items-center">
-                            <span>Commissions</span>
-                            <span>50,000€ (20%)</span>
-                          </div>
-                          <Progress value={20} className="h-2" />
-
-                          <div className="flex justify-between items-center">
-                            <span>Salons professionnels</span>
-                            <span>37,500€ (15%)</span>
-                          </div>
-                          <Progress value={15} className="h-2" />
-
-                          <div className="flex justify-between items-center">
-                            <span>Publicité</span>
-                            <span>62,500€ (25%)</span>
-                          </div>
-                          <Progress value={25} className="h-2" />
-
-                          <div className="flex justify-between items-center">
-                            <span>Autres</span>
-                            <span>25,000€ (10%)</span>
-                          </div>
-                          <Progress value={10} className="h-2" />
-                        </>
-                      )}
-
-                      {selectedBudget.type === "production" && (
-                        <>
-                          <div className="flex justify-between items-center">
-                            <span>Main d'œuvre</span>
-                            <span>37,500€ (50%)</span>
-                          </div>
-                          <Progress value={50} className="h-2" />
-
-                          <div className="flex justify-between items-center">
-                            <span>Matières premières</span>
-                            <span>22,500€ (30%)</span>
-                          </div>
-                          <Progress value={30} className="h-2" />
-
-                          <div className="flex justify-between items-center">
-                            <span>Maintenance</span>
-                            <span>7,500€ (10%)</span>
-                          </div>
-                          <Progress value={10} className="h-2" />
-
-                          <div className="flex justify-between items-center">
-                            <span>Énergie</span>
-                            <span>7,500€ (10%)</span>
-                          </div>
-                          <Progress value={10} className="h-2" />
-                        </>
-                      )}
+                      <div className="flex justify-between items-center">
+                        <span>Core operations</span>
+                        <span>45% allocation</span>
+                      </div>
+                      <Progress value={45} className="h-2" />
+                      <div className="flex justify-between items-center">
+                        <span>Growth initiatives</span>
+                        <span>30% allocation</span>
+                      </div>
+                      <Progress value={30} className="h-2" />
+                      <div className="flex justify-between items-center">
+                        <span>Enablement</span>
+                        <span>25% allocation</span>
+                      </div>
+                      <Progress value={25} className="h-2" />
                     </div>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="progress">
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-3">Progression du budget</h4>
+                    <h4 className="text-sm font-medium mb-3">Execution status</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Progression globale</span>
+                        <span>Overall execution</span>
                         <span>{selectedBudget.progress}%</span>
                       </div>
                       <Progress value={selectedBudget.progress} className="h-2" />
                     </div>
 
                     <div className="mt-6 space-y-4">
-                      <h4 className="text-sm font-medium">Détails de la progression</h4>
+                      <h4 className="text-sm font-medium">Execution detail</h4>
 
                       <div className="border rounded-md p-4">
                         <div className="flex justify-between mb-2">
-                          <span className="font-medium">Budget alloué</span>
-                          <span>{selectedBudget.amount.toLocaleString()}€</span>
+                          <span className="font-medium">Allocated</span>
+                          <span>{selectedBudget.amount.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}</span>
                         </div>
                         <div className="flex justify-between mb-2">
-                          <span className="font-medium">Budget utilisé</span>
+                          <span className="font-medium">Committed</span>
                           <span>
-                            {Math.round((selectedBudget.amount * selectedBudget.progress) / 100).toLocaleString()}€
+                            {Math.round((selectedBudget.amount * selectedBudget.progress) / 100).toLocaleString("en-US", {
+                              style: "currency",
+                              currency: "USD",
+                              maximumFractionDigits: 0,
+                            })}
                           </span>
                         </div>
                         <div className="flex justify-between mb-2">
-                          <span className="font-medium">Budget restant</span>
+                          <span className="font-medium">Remaining</span>
                           <span>
                             {Math.round(
                               (selectedBudget.amount * (100 - selectedBudget.progress)) / 100,
-                            ).toLocaleString()}
-                            €
+                            ).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
                           </span>
                         </div>
                       </div>

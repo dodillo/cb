@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart4, Calculator, LineChart, PieChart, Sliders, Search } from "lucide-react"
 import { useAnalyses } from "@/hooks/use-analyses"
 import { formatDistanceToNow } from "date-fns"
-import { fr } from "date-fns/locale"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -22,11 +21,11 @@ export function RecentAnalyses() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case "ecarts":
+      case "variance":
         return <Calculator className="h-4 w-4" />
-      case "optimisation":
+      case "optimization":
         return <Sliders className="h-4 w-4" />
-      case "tendances":
+      case "trend":
         return <LineChart className="h-4 w-4" />
       case "distribution":
         return <PieChart className="h-4 w-4" />
@@ -35,29 +34,29 @@ export function RecentAnalyses() {
     }
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Unknown date"
     try {
-      return `Il y a ${formatDistanceToNow(new Date(dateString), { locale: fr })}`
-    } catch (e) {
-      return "Date inconnue"
+      return `${formatDistanceToNow(new Date(dateString))} ago`
+    } catch {
+      return "Unknown date"
     }
   }
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       .split(" ")
       .map((part) => part[0])
       .join("")
       .toUpperCase()
       .substring(0, 2)
-  }
 
   if (error) {
     return (
       <div className="p-4 bg-red-50 text-red-800 rounded-md">
-        Une erreur est survenue lors du chargement des analyses. Veuillez réessayer.
+        Unable to load analyses. Please try again.
         <Button variant="outline" size="sm" onClick={refreshAnalyses} className="mt-2">
-          Réessayer
+          Retry
         </Button>
       </div>
     )
@@ -69,7 +68,7 @@ export function RecentAnalyses() {
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Rechercher des analyses..."
+          placeholder="Search analyses..."
           className="pl-8"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -103,11 +102,9 @@ export function RecentAnalyses() {
         </div>
       ) : analyses.length === 0 ? (
         <div className="text-center p-8 border rounded-lg bg-muted/50">
-          <p className="text-muted-foreground">Aucune analyse trouvée</p>
+          <p className="text-muted-foreground">No analyses found</p>
           <p className="text-sm text-muted-foreground mt-1">
-            {searchTerm
-              ? "Essayez avec d'autres termes de recherche"
-              : "Créez votre première analyse pour la voir apparaître ici"}
+            {searchTerm ? "Try different search terms" : "Run an analysis to populate this view"}
           </p>
         </div>
       ) : (
@@ -129,9 +126,11 @@ export function RecentAnalyses() {
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={analysis.users?.avatar_url || ""} alt={analysis.users?.name || "User"} />
-                        <AvatarFallback>{analysis.users?.name ? getInitials(analysis.users.name) : "U"}</AvatarFallback>
+                        <AvatarFallback>
+                          {analysis.users?.name ? getInitials(analysis.users.name) : "AN"}
+                        </AvatarFallback>
                       </Avatar>
-                      <span className="text-muted-foreground">{analysis.users?.name || "Utilisateur inconnu"}</span>
+                      <span className="text-muted-foreground">{analysis.users?.name || "Analyst"}</span>
                     </div>
                     <span className="text-muted-foreground">{formatDate(analysis.created_at)}</span>
                   </div>

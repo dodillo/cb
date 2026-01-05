@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -14,88 +14,83 @@ import { toast } from "@/components/ui/use-toast"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SectionLoading } from "@/components/accounting/section-loading"
+import { baselineProducts } from "@/lib/baseline-data"
 
 const formSchema = z.object({
   date: z.string({
-    required_error: "Veuillez sélectionner une date",
+    required_error: "Select a date",
   }),
-  type: z.enum(["charge", "produit"], {
-    required_error: "Veuillez sélectionner un type d'opération",
+  type: z.enum(["expense", "revenue"], {
+    required_error: "Select a transaction type",
   }),
   accountNumber: z.string().min(1, {
-    message: "Veuillez saisir un numéro de compte",
+    message: "Enter an account number",
   }),
   amount: z.string().refine((val) => !isNaN(Number.parseFloat(val)) && Number.parseFloat(val) > 0, {
-    message: "Le montant doit être un nombre positif",
+    message: "Amount must be a positive number",
   }),
   description: z.string().min(3, {
-    message: "La description doit contenir au moins 3 caractères",
+    message: "Description must be at least 3 characters",
   }),
   analyticalAxis: z.string({
-    required_error: "Veuillez sélectionner un axe analytique",
+    required_error: "Select an allocation axis",
   }),
   productId: z.string().optional(),
 })
 
-const products = [
-  { id: "prod1", name: "Produit A" },
-  { id: "prod2", name: "Produit B" },
-  { id: "prod3", name: "Produit C" },
+const expenseAccounts = [
+  { number: "600", name: "Procurement" },
+  { number: "610", name: "External Services" },
+  { number: "620", name: "Professional Services" },
+  { number: "630", name: "Taxes and Fees" },
+  { number: "640", name: "People Operations" },
+  { number: "650", name: "General & Administrative" },
+  { number: "660", name: "Finance Costs" },
+  { number: "670", name: "Non-Operating Expenses" },
+  { number: "680", name: "Depreciation & Amortization" },
 ]
 
-const chargeAccounts = [
-  { number: "60", name: "Achats" },
-  { number: "61", name: "Services extérieurs" },
-  { number: "62", name: "Autres services extérieurs" },
-  { number: "63", name: "Impôts, taxes et versements assimilés" },
-  { number: "64", name: "Charges de personnel" },
-  { number: "65", name: "Autres charges de gestion courante" },
-  { number: "66", name: "Charges financières" },
-  { number: "67", name: "Charges exceptionnelles" },
-  { number: "68", name: "Dotations aux amortissements et provisions" },
-]
-
-const produitAccounts = [
-  { number: "70", name: "Ventes de produits, services" },
-  { number: "71", name: "Production stockée" },
-  { number: "72", name: "Production immobilisée" },
-  { number: "74", name: "Subventions d'exploitation" },
-  { number: "75", name: "Autres produits de gestion courante" },
-  { number: "76", name: "Produits financiers" },
-  { number: "77", name: "Produits exceptionnels" },
-  { number: "78", name: "Reprises sur amortissements et provisions" },
-  { number: "79", name: "Transferts de charges" },
+const revenueAccounts = [
+  { number: "700", name: "Product Revenue" },
+  { number: "710", name: "Services Revenue" },
+  { number: "720", name: "Subscription Revenue" },
+  { number: "740", name: "Operating Grants" },
+  { number: "750", name: "Other Operating Income" },
+  { number: "760", name: "Finance Income" },
+  { number: "770", name: "Non-Operating Income" },
+  { number: "780", name: "Provision Reversals" },
+  { number: "790", name: "Cost Reallocations" },
 ]
 
 const analyticalAxes = [
-  { id: "product", name: "Par produit" },
-  { id: "department", name: "Par département" },
-  { id: "project", name: "Par projet" },
-  { id: "activity", name: "Par activité" },
+  { id: "product", name: "By product" },
+  { id: "department", name: "By department" },
+  { id: "project", name: "By initiative" },
+  { id: "activity", name: "By activity" },
 ]
 
 const departments = [
-  { id: "prod", name: "Production" },
-  { id: "rnd", name: "R&D" },
+  { id: "ops", name: "Operations" },
+  { id: "finance", name: "Finance" },
   { id: "sales", name: "Commercial" },
-  { id: "admin", name: "Administration" },
+  { id: "admin", name: "Shared Services" },
 ]
 
 const projects = [
-  { id: "proj1", name: "Projet Alpha" },
-  { id: "proj2", name: "Projet Beta" },
-  { id: "proj3", name: "Projet Gamma" },
+  { id: "proj1", name: "Efficiency Program" },
+  { id: "proj2", name: "Market Expansion" },
+  { id: "proj3", name: "Data Modernization" },
 ]
 
 const activities = [
-  { id: "act1", name: "Fabrication" },
-  { id: "act2", name: "Distribution" },
+  { id: "act1", name: "Delivery" },
+  { id: "act2", name: "Enablement" },
   { id: "act3", name: "Marketing" },
   { id: "act4", name: "Support" },
 ]
 
 export function AccountingEntryForm() {
-  const [entryType, setEntryType] = useState<"charge" | "produit">("charge")
+  const [entryType, setEntryType] = useState<"expense" | "revenue">("expense")
   const [analyticalAxis, setAnalyticalAxis] = useState<string>("product")
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("simple")
@@ -103,17 +98,16 @@ export function AccountingEntryForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "charge",
+      type: "expense",
       description: "",
       analyticalAxis: "product",
     },
   })
 
-  // Simulate loading data
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false)
-    }, 1500)
+    }, 800)
 
     return () => clearTimeout(timer)
   }, [])
@@ -121,12 +115,10 @@ export function AccountingEntryForm() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true)
 
-    // Simulate API call
     setTimeout(() => {
-      console.log(values)
       toast({
-        title: "Opération enregistrée",
-        description: `Une ${values.type === "charge" ? "charge" : "produit"} de ${values.amount}€ a été enregistrée.`,
+        title: "Entry saved",
+        description: `A ${values.type} entry for $${values.amount} has been recorded.`,
       })
       form.reset({
         type: entryType,
@@ -138,16 +130,11 @@ export function AccountingEntryForm() {
         productId: "",
       })
       setLoading(false)
-    }, 1000)
+    }, 800)
   }
 
   if (loading) {
-    return (
-      <SectionLoading
-        title="Préparation du formulaire"
-        description="Chargement des comptes et des axes analytiques..."
-      />
-    )
+    return <SectionLoading title="Preparing form" description="Loading accounts and allocation axes..." />
   }
 
   return (
@@ -161,12 +148,12 @@ export function AccountingEntryForm() {
           setTimeout(() => {
             setActiveTab(value)
             setLoading(false)
-          }, 1000)
+          }, 600)
         }}
       >
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="simple">Saisie simple</TabsTrigger>
-          <TabsTrigger value="advanced">Saisie avancée</TabsTrigger>
+          <TabsTrigger value="simple">Quick entry</TabsTrigger>
+          <TabsTrigger value="advanced">Detailed journal</TabsTrigger>
         </TabsList>
 
         <TabsContent value="simple">
@@ -192,10 +179,10 @@ export function AccountingEntryForm() {
                   name="type"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>Type d'opération</FormLabel>
+                      <FormLabel>Transaction type</FormLabel>
                       <FormControl>
                         <RadioGroup
-                          onValueChange={(value: "charge" | "produit") => {
+                          onValueChange={(value: "expense" | "revenue") => {
                             field.onChange(value)
                             setEntryType(value)
                             form.setValue("accountNumber", "")
@@ -205,15 +192,15 @@ export function AccountingEntryForm() {
                         >
                           <FormItem className="flex items-center space-x-2 space-y-0">
                             <FormControl>
-                              <RadioGroupItem value="charge" />
+                              <RadioGroupItem value="expense" />
                             </FormControl>
-                            <FormLabel className="font-normal">Charge</FormLabel>
+                            <FormLabel className="font-normal">Expense</FormLabel>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2 space-y-0">
                             <FormControl>
-                              <RadioGroupItem value="produit" />
+                              <RadioGroupItem value="revenue" />
                             </FormControl>
-                            <FormLabel className="font-normal">Produit</FormLabel>
+                            <FormLabel className="font-normal">Revenue</FormLabel>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -228,22 +215,22 @@ export function AccountingEntryForm() {
                 name="accountNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Compte comptable</FormLabel>
+                    <FormLabel>Account</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez un compte" />
+                          <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(entryType === "charge" ? chargeAccounts : produitAccounts).map((account) => (
+                        {(entryType === "expense" ? expenseAccounts : revenueAccounts).map((account) => (
                           <SelectItem key={account.number} value={account.number}>
                             {account.number} - {account.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>Sélectionnez le compte selon le Plan Comptable Général</FormDescription>
+                    <FormDescription>Select the account aligned to your chart of accounts.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -255,7 +242,7 @@ export function AccountingEntryForm() {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Montant (€)</FormLabel>
+                      <FormLabel>Amount (USD)</FormLabel>
                       <FormControl>
                         <Input placeholder="0.00" {...field} />
                       </FormControl>
@@ -269,7 +256,7 @@ export function AccountingEntryForm() {
                   name="analyticalAxis"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Axe analytique</FormLabel>
+                      <FormLabel>Allocation axis</FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value)
@@ -279,7 +266,7 @@ export function AccountingEntryForm() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un axe analytique" />
+                            <SelectValue placeholder="Select an axis" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -290,7 +277,7 @@ export function AccountingEntryForm() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>Axe d'analyse pour la répartition analytique</FormDescription>
+                      <FormDescription>Allocate the entry by the chosen dimension.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -303,15 +290,15 @@ export function AccountingEntryForm() {
                   name="productId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Produit</FormLabel>
+                      <FormLabel>Product</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un produit" />
+                            <SelectValue placeholder="Select a product" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {products.map((product) => (
+                          {baselineProducts.map((product) => (
                             <SelectItem key={product.id} value={product.id}>
                               {product.name}
                             </SelectItem>
@@ -330,11 +317,11 @@ export function AccountingEntryForm() {
                   name="productId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Département</FormLabel>
+                      <FormLabel>Department</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un département" />
+                            <SelectValue placeholder="Select a department" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -357,11 +344,11 @@ export function AccountingEntryForm() {
                   name="productId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Projet</FormLabel>
+                      <FormLabel>Initiative</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un projet" />
+                            <SelectValue placeholder="Select an initiative" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -384,11 +371,11 @@ export function AccountingEntryForm() {
                   name="productId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Activité</FormLabel>
+                      <FormLabel>Activity</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez une activité" />
+                            <SelectValue placeholder="Select an activity" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -412,7 +399,7 @@ export function AccountingEntryForm() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Description de l'opération..." {...field} />
+                      <Textarea placeholder="Describe the transaction..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -420,7 +407,7 @@ export function AccountingEntryForm() {
               />
 
               <Button type="submit" className="w-full md:w-auto">
-                Enregistrer l'opération
+                Save entry
               </Button>
             </form>
           </Form>
@@ -430,9 +417,9 @@ export function AccountingEntryForm() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center mb-6">
-                <h3 className="text-lg font-medium">Saisie d'écriture comptable complète</h3>
+                <h3 className="text-lg font-medium">Journal entry builder</h3>
                 <p className="text-sm text-muted-foreground">
-                  Utilisez ce formulaire pour saisir des écritures comptables avec plusieurs lignes (débit/crédit)
+                  Capture multi-line debit and credit lines for a complete journal entry.
                 </p>
               </div>
 
@@ -443,50 +430,50 @@ export function AccountingEntryForm() {
                     <Input type="date" />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Pièce justificative</label>
-                    <Input placeholder="N° de facture, reçu, etc." />
+                    <label className="text-sm font-medium">Reference</label>
+                    <Input placeholder="Invoice, receipt, or memo ID" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Libellé de l'écriture</label>
-                  <Input placeholder="Ex: Achat de fournitures" />
+                  <label className="text-sm font-medium">Entry description</label>
+                  <Input placeholder="Vendor services for April" />
                 </div>
 
                 <div className="border rounded-md p-4 space-y-4">
-                  <h4 className="font-medium">Lignes d'écriture</h4>
+                  <h4 className="font-medium">Entry lines</h4>
 
                   <div className="border-b pb-4">
                     <div className="grid grid-cols-12 gap-2">
                       <div className="col-span-4">
-                        <label className="text-xs font-medium">Compte</label>
+                        <label className="text-xs font-medium">Account</label>
                         <Select>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner" />
+                            <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="601">601 - Achats matières premières</SelectItem>
-                            <SelectItem value="607">607 - Achats de marchandises</SelectItem>
-                            <SelectItem value="512">512 - Banque</SelectItem>
+                            <SelectItem value="601">601 - Procurement</SelectItem>
+                            <SelectItem value="607">607 - Supplies</SelectItem>
+                            <SelectItem value="512">512 - Bank</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="col-span-3">
-                        <label className="text-xs font-medium">Débit</label>
+                        <label className="text-xs font-medium">Debit</label>
                         <Input placeholder="0.00" />
                       </div>
                       <div className="col-span-3">
-                        <label className="text-xs font-medium">Crédit</label>
+                        <label className="text-xs font-medium">Credit</label>
                         <Input placeholder="0.00" />
                       </div>
                       <div className="col-span-2 flex items-end">
                         <Select>
                           <SelectTrigger>
-                            <SelectValue placeholder="Axe" />
+                            <SelectValue placeholder="Axis" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="product">Produit</SelectItem>
-                            <SelectItem value="department">Département</SelectItem>
+                            <SelectItem value="product">Product</SelectItem>
+                            <SelectItem value="department">Department</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -498,11 +485,11 @@ export function AccountingEntryForm() {
                       <div className="col-span-4">
                         <Select>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner" />
+                            <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="401">401 - Fournisseurs</SelectItem>
-                            <SelectItem value="44566">44566 - TVA déductible</SelectItem>
+                            <SelectItem value="401">401 - Vendors</SelectItem>
+                            <SelectItem value="44566">44566 - Tax</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -515,11 +502,11 @@ export function AccountingEntryForm() {
                       <div className="col-span-2">
                         <Select>
                           <SelectTrigger>
-                            <SelectValue placeholder="Axe" />
+                            <SelectValue placeholder="Axis" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="product">Produit</SelectItem>
-                            <SelectItem value="department">Département</SelectItem>
+                            <SelectItem value="product">Product</SelectItem>
+                            <SelectItem value="department">Department</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -527,27 +514,27 @@ export function AccountingEntryForm() {
                   </div>
 
                   <Button variant="outline" size="sm" className="w-full">
-                    + Ajouter une ligne
+                    + Add line
                   </Button>
                 </div>
 
                 <div className="flex justify-between items-center border-t pt-4">
                   <div>
-                    <span className="text-sm font-medium">Total débit: </span>
-                    <span>0.00 €</span>
+                    <span className="text-sm font-medium">Total debit: </span>
+                    <span>$0.00</span>
                   </div>
                   <div>
-                    <span className="text-sm font-medium">Total crédit: </span>
-                    <span>0.00 €</span>
+                    <span className="text-sm font-medium">Total credit: </span>
+                    <span>$0.00</span>
                   </div>
                   <div>
-                    <span className="text-sm font-medium">Différence: </span>
-                    <span className="text-red-500">0.00 €</span>
+                    <span className="text-sm font-medium">Difference: </span>
+                    <span className="text-rose-500">$0.00</span>
                   </div>
                 </div>
 
                 <div className="flex justify-end">
-                  <Button className="w-full md:w-auto">Enregistrer l'écriture</Button>
+                  <Button className="w-full md:w-auto">Save journal entry</Button>
                 </div>
               </div>
             </CardContent>

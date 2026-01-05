@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -19,49 +19,73 @@ import {
   CartesianGrid,
 } from "recharts"
 import { Download } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useFinancialOverview } from "@/hooks/useFinancialOverview"
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82ca9d"]
 
-const chargesByProduct = [
-  { name: "Produit A", value: 28500 },
-  { name: "Produit B", value: 19200 },
-  { name: "Produit C", value: 15800 },
-]
-
-const produitsByProduct = [
-  { name: "Produit A", value: 32000 },
-  { name: "Produit B", value: 24500 },
-  { name: "Produit C", value: 18700 },
-]
-
-const chargesByCategory = [
-  { name: "Achats", value: 32000 },
-  { name: "Personnel", value: 45000 },
-  { name: "Services extérieurs", value: 12500 },
-  { name: "Impôts et taxes", value: 8000 },
-  { name: "Charges financières", value: 3500 },
-  { name: "Amortissements", value: 9800 },
-]
-
-const produitsByCategory = [
-  { name: "Ventes de produits", value: 58000 },
-  { name: "Prestations de services", value: 32000 },
-  { name: "Produits financiers", value: 1200 },
-  { name: "Subventions", value: 5000 },
-]
-
-const monthlyData = [
-  { name: "Jan", charges: 18500, produits: 22000 },
-  { name: "Fév", charges: 19200, produits: 21500 },
-  { name: "Mar", charges: 20500, produits: 23800 },
-  { name: "Avr", charges: 18900, produits: 22300 },
-  { name: "Mai", charges: 19800, produits: 24100 },
-  { name: "Juin", charges: 21200, produits: 25600 },
-]
+const getMonthLabel = (date: string) =>
+  new Intl.DateTimeFormat("en-US", { month: "short" }).format(new Date(date))
 
 export function AccountingReports() {
-  const [selectedPeriod, setSelectedPeriod] = useState("q1-2024")
-  const [selectedAxis, setSelectedAxis] = useState("product")
+  const [selectedPeriod, setSelectedPeriod] = useState("current")
+  const [selectedAxis, setSelectedAxis] = useState("axis")
+  const { data, isLoading } = useFinancialOverview()
+
+  const { expensesByAxis, revenueByAxis, expensesByAccount, revenueByAccount, monthlyData } = useMemo(() => {
+    const expensesByAxisMap = new Map<string, number>()
+    const revenueByAxisMap = new Map<string, number>()
+    const expensesByAccountMap = new Map<string, number>()
+    const revenueByAccountMap = new Map<string, number>()
+    const monthlyMap = new Map<string, { expenses: number; revenue: number }>()
+
+    data.entries.forEach((entry) => {
+      const axisKey = entry.analyticalAxis || "Unassigned"
+      const accountKey = entry.accountName || entry.accountNumber
+      const monthKey = getMonthLabel(entry.date)
+
+      if (!monthlyMap.has(monthKey)) {
+        monthlyMap.set(monthKey, { expenses: 0, revenue: 0 })
+      }
+
+      if (entry.type === "expense") {
+        expensesByAxisMap.set(axisKey, (expensesByAxisMap.get(axisKey) || 0) + entry.debit)
+        expensesByAccountMap.set(accountKey, (expensesByAccountMap.get(accountKey) || 0) + entry.debit)
+        monthlyMap.get(monthKey)!.expenses += entry.debit
+      } else {
+        revenueByAxisMap.set(axisKey, (revenueByAxisMap.get(axisKey) || 0) + entry.credit)
+        revenueByAccountMap.set(accountKey, (revenueByAccountMap.get(accountKey) || 0) + entry.credit)
+        monthlyMap.get(monthKey)!.revenue += entry.credit
+      }
+    })
+
+    return {
+      expensesByAxis: Array.from(expensesByAxisMap.entries()).map(([name, value]) => ({ name, value })),
+      revenueByAxis: Array.from(revenueByAxisMap.entries()).map(([name, value]) => ({ name, value })),
+      expensesByAccount: Array.from(expensesByAccountMap.entries()).map(([name, value]) => ({ name, value })),
+      revenueByAccount: Array.from(revenueByAccountMap.entries()).map(([name, value]) => ({ name, value })),
+      monthlyData: Array.from(monthlyMap.entries()).map(([name, values]) => ({
+        name,
+        expenses: values.expenses,
+        revenue: values.revenue,
+      })),
+    }
+  }, [data.entries])
+
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Loading analytical reports...</div>
+  }
+
+  if (!data.entries.length) {
+    return (
+      <Alert>
+        <AlertDescription>No accounting data available.</AlertDescription>
+      </Alert>
+    )
+  }
+
+  const totalExpenses = expensesByAxis.reduce((sum, item) => sum + item.value, 0)
+  const totalRevenue = revenueByAxis.reduce((sum, item) => sum + item.value, 0)
 
   return (
     <div className="space-y-6">
@@ -69,64 +93,53 @@ export function AccountingReports() {
         <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Période" />
+              <SelectValue placeholder="Period" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="q1-2024">T1 2024</SelectItem>
-              <SelectItem value="q4-2023">T4 2023</SelectItem>
-              <SelectItem value="2023">Année 2023</SelectItem>
-              <SelectItem value="2024">Année 2024</SelectItem>
+              <SelectItem value="current">Current quarter</SelectItem>
+              <SelectItem value="previous">Previous quarter</SelectItem>
+              <SelectItem value="year">Year-to-date</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={selectedAxis} onValueChange={setSelectedAxis}>
             <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Axe analytique" />
+              <SelectValue placeholder="Axis" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="product">Par produit</SelectItem>
-              <SelectItem value="department">Par département</SelectItem>
-              <SelectItem value="project">Par projet</SelectItem>
-              <SelectItem value="activity">Par activité</SelectItem>
+              <SelectItem value="axis">By analytical axis</SelectItem>
+              <SelectItem value="account">By account</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <Button variant="outline" className="w-full md:w-auto">
+        <Button variant="outline" className="w-full md:w-auto" disabled title="Export available in enterprise tier">
           <Download className="mr-2 h-4 w-4" />
-          Exporter les rapports
+          Export reports
         </Button>
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="charges">Charges</TabsTrigger>
-          <TabsTrigger value="produits">Produits</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="revenue">Revenue</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             <Card>
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Évolution mensuelle</h3>
+                <h3 className="text-lg font-medium mb-4">Monthly movement</h3>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={monthlyData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
+                  <BarChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip formatter={(value) => `${value} €`} />
+                    <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
                     <Legend />
-                    <Bar name="Charges" dataKey="charges" fill="#FF8042" />
-                    <Bar name="Produits" dataKey="produits" fill="#0088FE" />
+                    <Bar name="Expenses" dataKey="expenses" fill="#FF8042" />
+                    <Bar name="Revenue" dataKey="revenue" fill="#0088FE" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -134,33 +147,23 @@ export function AccountingReports() {
 
             <Card>
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Résultat par produit</h3>
+                <h3 className="text-lg font-medium mb-4">Operating result by axis</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart
-                    data={[
-                      { name: "Produit A", value: produitsByProduct[0].value - chargesByProduct[0].value },
-                      { name: "Produit B", value: produitsByProduct[1].value - chargesByProduct[1].value },
-                      { name: "Produit C", value: produitsByProduct[2].value - chargesByProduct[2].value },
-                    ]}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
+                    data={revenueByAxis.map((item) => ({
+                      name: item.name,
+                      value: item.value - (expensesByAxis.find((expense) => expense.name === item.name)?.value || 0),
+                    }))}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip formatter={(value) => `${value} €`} />
-                    <Bar name="Résultat" dataKey="value" fill="#82ca9d">
-                      {[
-                        { name: "Produit A", value: produitsByProduct[0].value - chargesByProduct[0].value },
-                        { name: "Produit B", value: produitsByProduct[1].value - chargesByProduct[1].value },
-                        { name: "Produit C", value: produitsByProduct[2].value - chargesByProduct[2].value },
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.value >= 0 ? "#82ca9d" : "#ff8042"} />
-                      ))}
+                    <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
+                    <Bar name="Operating result" dataKey="value" fill="#82ca9d">
+                      {revenueByAxis.map((item, index) => {
+                        const value = item.value - (expensesByAxis.find((expense) => expense.name === item.name)?.value || 0)
+                        return <Cell key={`cell-${index}`} fill={value >= 0 ? "#82ca9d" : "#ff8042"} />
+                      })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -170,36 +173,26 @@ export function AccountingReports() {
 
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Synthèse analytique</h3>
+              <h3 className="text-lg font-medium mb-4">Analytical summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="border rounded-md p-4 text-center">
-                  <div className="text-sm text-muted-foreground mb-1">Total des charges</div>
+                  <div className="text-sm text-muted-foreground mb-1">Total expenses</div>
                   <div className="text-2xl font-bold">
-                    {chargesByProduct.reduce((sum, item) => sum + item.value, 0).toLocaleString()} €
+                    {totalExpenses.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
                   </div>
                 </div>
                 <div className="border rounded-md p-4 text-center">
-                  <div className="text-sm text-muted-foreground mb-1">Total des produits</div>
+                  <div className="text-sm text-muted-foreground mb-1">Total revenue</div>
                   <div className="text-2xl font-bold">
-                    {produitsByProduct.reduce((sum, item) => sum + item.value, 0).toLocaleString()} €
+                    {totalRevenue.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
                   </div>
                 </div>
                 <div className="border rounded-md p-4 text-center">
-                  <div className="text-sm text-muted-foreground mb-1">Résultat</div>
+                  <div className="text-sm text-muted-foreground mb-1">Operating result</div>
                   <div
-                    className={`text-2xl font-bold ${
-                      produitsByProduct.reduce((sum, item) => sum + item.value, 0) -
-                        chargesByProduct.reduce((sum, item) => sum + item.value, 0) >=
-                      0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
+                    className={`text-2xl font-bold ${totalRevenue - totalExpenses >= 0 ? "text-emerald-600" : "text-rose-600"}`}
                   >
-                    {(
-                      produitsByProduct.reduce((sum, item) => sum + item.value, 0) -
-                      chargesByProduct.reduce((sum, item) => sum + item.value, 0)
-                    ).toLocaleString()}{" "}
-                    €
+                    {(totalRevenue - totalExpenses).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
                   </div>
                 </div>
               </div>
@@ -207,15 +200,15 @@ export function AccountingReports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="charges" className="space-y-6 mt-6">
+        <TabsContent value="expenses" className="space-y-6 mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Répartition des charges par produit</h3>
+                <h3 className="text-lg font-medium mb-4">Expenses by axis</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={chargesByProduct}
+                      data={expensesByAxis}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -224,11 +217,11 @@ export function AccountingReports() {
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {chargesByProduct.map((entry, index) => (
+                      {expensesByAxis.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `${value} €`} />
+                    <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -237,11 +230,11 @@ export function AccountingReports() {
 
             <Card>
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Répartition des charges par catégorie</h3>
+                <h3 className="text-lg font-medium mb-4">Expenses by account</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={chargesByCategory}
+                      data={expensesByAccount}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -250,74 +243,28 @@ export function AccountingReports() {
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {chargesByCategory.map((entry, index) => (
+                      {expensesByAccount.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `${value} €`} />
+                    <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Détail des charges par produit</h3>
-              <div className="border rounded-md">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Produit
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Montant (€)
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Pourcentage
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {chargesByProduct.map((item, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                          {item.value.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                          {((item.value / chargesByProduct.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(
-                            1,
-                          )}
-                          %
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">Total</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                        {chargesByProduct.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">100%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
-        <TabsContent value="produits" className="space-y-6 mt-6">
+        <TabsContent value="revenue" className="space-y-6 mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Répartition des produits par produit</h3>
+                <h3 className="text-lg font-medium mb-4">Revenue by axis</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={produitsByProduct}
+                      data={revenueByAxis}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -326,11 +273,11 @@ export function AccountingReports() {
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {produitsByProduct.map((entry, index) => (
+                      {revenueByAxis.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `${value} €`} />
+                    <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -339,11 +286,11 @@ export function AccountingReports() {
 
             <Card>
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Répartition des produits par catégorie</h3>
+                <h3 className="text-lg font-medium mb-4">Revenue by account</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={produitsByCategory}
+                      data={revenueByAccount}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -352,63 +299,17 @@ export function AccountingReports() {
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {produitsByCategory.map((entry, index) => (
+                      {revenueByAccount.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `${value} €`} />
+                    <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Détail des produits par produit</h3>
-              <div className="border rounded-md">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Produit
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Montant (€)
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Pourcentage
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {produitsByProduct.map((item, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                          {item.value.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                          {((item.value / produitsByProduct.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(
-                            1,
-                          )}
-                          %
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">Total</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                        {produitsByProduct.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">100%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

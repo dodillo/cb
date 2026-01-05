@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface AnalyseResultCardProps {
+interface AnalysisResultCardProps {
   title: string
   value: string
   type: "positive" | "negative" | "neutral"
@@ -10,7 +10,7 @@ interface AnalyseResultCardProps {
   testId?: string
 }
 
-export function AnalyseResultCard({ title, value, type, description, testId }: AnalyseResultCardProps) {
+export function AnalysisResultCard({ title, value, type, description, testId }: AnalysisResultCardProps) {
   const getColorClass = () => {
     switch (type) {
       case "positive":

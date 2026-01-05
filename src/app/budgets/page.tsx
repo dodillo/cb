@@ -7,21 +7,21 @@ export default function BudgetsPage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Élaboration des budgets</h1>
-        <p className="text-muted-foreground">Créez et gérez les différents types de budgets pour votre coopérative</p>
+        <h1 className="text-3xl font-bold tracking-tight">Budget Performance</h1>
+        <p className="text-muted-foreground">Plan, govern, and track enterprise budgets end to end.</p>
       </div>
 
       <Tabs defaultValue="create" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="create">Créer un budget</TabsTrigger>
-          <TabsTrigger value="list">Liste des budgets</TabsTrigger>
+          <TabsTrigger value="create">Create budget</TabsTrigger>
+          <TabsTrigger value="list">Portfolio view</TabsTrigger>
         </TabsList>
 
         <TabsContent value="create" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Création d'un nouveau budget</CardTitle>
-              <CardDescription>Définissez les paramètres de votre nouveau budget</CardDescription>
+              <CardTitle>New budget</CardTitle>
+              <CardDescription>Define targets and guardrails for the next cycle.</CardDescription>
             </CardHeader>
             <CardContent>
               <BudgetCreationForm />
@@ -32,8 +32,8 @@ export default function BudgetsPage() {
         <TabsContent value="list" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Budgets existants</CardTitle>
-              <CardDescription>Consultez et gérez vos budgets existants</CardDescription>
+              <CardTitle>Active budgets</CardTitle>
+              <CardDescription>Review execution status and allocation posture.</CardDescription>
             </CardHeader>
             <CardContent>
               <BudgetList />

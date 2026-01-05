@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   BarChart,
@@ -23,7 +23,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
-export function DataVisualizer({ data, structure, onContinue }) {
+type PreviewData = {
+  headers: string[]
+  data: string[][]
+}
+
+type DataStructure = {
+  columns: Array<{ name: string; index: number; type: string }>
+}
+
+type DataVisualizerProps = {
+  data: PreviewData
+  structure: DataStructure
+  onContinue: () => void
+}
+
+export function DataVisualizer({ data, structure, onContinue }: DataVisualizerProps) {
   const [viewType, setViewType] = useState("table")
   const [selectedColumns, setSelectedColumns] = useState({
     x: structure?.columns[0]?.index || 0,
@@ -32,8 +47,8 @@ export function DataVisualizer({ data, structure, onContinue }) {
       structure?.columns.find((col) => col.type === "text" && col.index !== (structure?.columns[0]?.index || 0))
         ?.index || 0,
   })
-  const [chartData, setChartData] = useState([])
-  const [summaryStats, setSummaryStats] = useState(null)
+  const [chartData, setChartData] = useState<Array<{ name: string; value: number }>>([])
+  const [summaryStats, setSummaryStats] = useState<Record<string, any> | null>(null)
 
   useEffect(() => {
     if (data && structure) {
@@ -49,10 +64,8 @@ export function DataVisualizer({ data, structure, onContinue }) {
     const yIndex = selectedColumns.y
     const categoryIndex = selectedColumns.category
 
-    // Prepare data for charts
     if (viewType === "bar" || viewType === "line") {
-      // Group data by x-axis value
-      const groupedData = {}
+      const groupedData: Record<string, { name: string; value: number }> = {}
 
       data.data.forEach((row) => {
         const xValue = row[xIndex]
@@ -67,8 +80,7 @@ export function DataVisualizer({ data, structure, onContinue }) {
 
       setChartData(Object.values(groupedData))
     } else if (viewType === "pie") {
-      // Group data by category
-      const groupedData = {}
+      const groupedData: Record<string, { name: string; value: number }> = {}
 
       data.data.forEach((row) => {
         const category = row[categoryIndex]
@@ -89,19 +101,15 @@ export function DataVisualizer({ data, structure, onContinue }) {
     if (!data || !structure) return
 
     const numericColumns = structure.columns.filter((col) => col.type === "number")
-
-    const stats = {}
+    const stats: Record<string, any> = {}
 
     numericColumns.forEach((column) => {
       const values = data.data.map((row) => Number.parseFloat(row[column.index]) || 0)
-
-      // Calculate basic statistics
       const sum = values.reduce((acc, val) => acc + val, 0)
       const avg = sum / values.length
       const min = Math.min(...values)
       const max = Math.max(...values)
 
-      // Calculate median
       const sortedValues = [...values].sort((a, b) => a - b)
       const middle = Math.floor(sortedValues.length / 2)
       const median =
@@ -121,34 +129,34 @@ export function DataVisualizer({ data, structure, onContinue }) {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"]
 
-  const formatNumber = (value) => {
-    return new Intl.NumberFormat("fr-FR").format(value)
+  const formatNumber = (value: number | string) => {
+    return new Intl.NumberFormat("en-US").format(Number(value))
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Visualisation des données</CardTitle>
-        <CardDescription>Explorez vos données avant de configurer votre analyse</CardDescription>
+        <CardTitle>Data preview</CardTitle>
+        <CardDescription>Explore your dataset before configuring analysis.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs value={viewType} onValueChange={setViewType}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="table" className="flex items-center gap-2">
               <TableIcon className="h-4 w-4" />
-              <span>Tableau</span>
+              <span>Table</span>
             </TabsTrigger>
             <TabsTrigger value="bar" className="flex items-center gap-2">
               <BarChart2 className="h-4 w-4" />
-              <span>Histogramme</span>
+              <span>Bar</span>
             </TabsTrigger>
             <TabsTrigger value="line" className="flex items-center gap-2">
               <LineChartIcon className="h-4 w-4" />
-              <span>Courbe</span>
+              <span>Line</span>
             </TabsTrigger>
             <TabsTrigger value="pie" className="flex items-center gap-2">
               <PieChartIcon className="h-4 w-4" />
-              <span>Camembert</span>
+              <span>Pie</span>
             </TabsTrigger>
           </TabsList>
 
@@ -158,17 +166,17 @@ export function DataVisualizer({ data, structure, onContinue }) {
                 {(viewType === "bar" || viewType === "line") && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="x-axis">Axe X</Label>
+                      <Label htmlFor="x-axis">X axis</Label>
                       <Select
                         value={selectedColumns.x.toString()}
                         onValueChange={(value) => setSelectedColumns({ ...selectedColumns, x: Number.parseInt(value) })}
                       >
                         <SelectTrigger id="x-axis">
-                          <SelectValue placeholder="Sélectionnez une colonne" />
+                          <SelectValue placeholder="Select a column" />
                         </SelectTrigger>
                         <SelectContent>
-                          {structure.columns.map((column, index) => (
-                            <SelectItem key={index} value={index.toString()}>
+                          {structure.columns.map((column) => (
+                            <SelectItem key={column.index} value={column.index.toString()}>
                               {column.name}
                             </SelectItem>
                           ))}
@@ -177,19 +185,19 @@ export function DataVisualizer({ data, structure, onContinue }) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="y-axis">Axe Y (valeur)</Label>
+                      <Label htmlFor="y-axis">Y axis (value)</Label>
                       <Select
                         value={selectedColumns.y.toString()}
                         onValueChange={(value) => setSelectedColumns({ ...selectedColumns, y: Number.parseInt(value) })}
                       >
                         <SelectTrigger id="y-axis">
-                          <SelectValue placeholder="Sélectionnez une colonne" />
+                          <SelectValue placeholder="Select a column" />
                         </SelectTrigger>
                         <SelectContent>
                           {structure.columns
                             .filter((col) => col.type === "number")
-                            .map((column, index) => (
-                              <SelectItem key={index} value={column.index.toString()}>
+                            .map((column) => (
+                              <SelectItem key={column.index} value={column.index.toString()}>
                                 {column.name}
                               </SelectItem>
                             ))}
@@ -202,7 +210,7 @@ export function DataVisualizer({ data, structure, onContinue }) {
                 {viewType === "pie" && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="category">Catégorie</Label>
+                      <Label htmlFor="category">Category</Label>
                       <Select
                         value={selectedColumns.category.toString()}
                         onValueChange={(value) =>
@@ -210,13 +218,13 @@ export function DataVisualizer({ data, structure, onContinue }) {
                         }
                       >
                         <SelectTrigger id="category">
-                          <SelectValue placeholder="Sélectionnez une colonne" />
+                          <SelectValue placeholder="Select a column" />
                         </SelectTrigger>
                         <SelectContent>
                           {structure.columns
                             .filter((col) => col.type === "text")
-                            .map((column, index) => (
-                              <SelectItem key={index} value={column.index.toString()}>
+                            .map((column) => (
+                              <SelectItem key={column.index} value={column.index.toString()}>
                                 {column.name}
                               </SelectItem>
                             ))}
@@ -225,19 +233,19 @@ export function DataVisualizer({ data, structure, onContinue }) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="value">Valeur</Label>
+                      <Label htmlFor="value">Value</Label>
                       <Select
                         value={selectedColumns.y.toString()}
                         onValueChange={(value) => setSelectedColumns({ ...selectedColumns, y: Number.parseInt(value) })}
                       >
                         <SelectTrigger id="value">
-                          <SelectValue placeholder="Sélectionnez une colonne" />
+                          <SelectValue placeholder="Select a column" />
                         </SelectTrigger>
                         <SelectContent>
                           {structure.columns
                             .filter((col) => col.type === "number")
-                            .map((column, index) => (
-                              <SelectItem key={index} value={column.index.toString()}>
+                            .map((column) => (
+                              <SelectItem key={column.index} value={column.index.toString()}>
                                 {column.name}
                               </SelectItem>
                             ))}
@@ -256,8 +264,8 @@ export function DataVisualizer({ data, structure, onContinue }) {
                 <table className="w-full">
                   <thead>
                     <tr className="bg-muted">
-                      {data.headers.map((header, index) => (
-                        <th key={index} className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                      {data.headers.map((header) => (
+                        <th key={header} className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
                           {header}
                         </th>
                       ))}
@@ -280,23 +288,23 @@ export function DataVisualizer({ data, structure, onContinue }) {
 
             {summaryStats && (
               <div className="mt-6 space-y-4">
-                <h3 className="text-sm font-medium">Statistiques</h3>
+                <h3 className="text-sm font-medium">Summary statistics</h3>
                 <div className="rounded-md border overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="bg-muted">
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Colonne</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Somme</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Moyenne</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Column</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Sum</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Average</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Min</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Max</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Médiane</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Median</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {Object.entries(summaryStats).map(([column, stats], index) => (
-                          <tr key={index} className="border-t">
+                        {Object.entries(summaryStats).map(([column, stats]) => (
+                          <tr key={column} className="border-t">
                             <td className="px-4 py-2 text-sm font-medium">{column}</td>
                             <td className="px-4 py-2 text-sm">{formatNumber(stats.sum)}</td>
                             <td className="px-4 py-2 text-sm">{formatNumber(stats.avg.toFixed(2))}</td>
@@ -416,7 +424,7 @@ export function DataVisualizer({ data, structure, onContinue }) {
       </CardContent>
       <CardFooter className="flex justify-end">
         <Button onClick={onContinue}>
-          Continuer vers la configuration
+          Continue to configuration
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </CardFooter>

@@ -1,6 +1,6 @@
 # Release Guide
 
-This guide covers the process for releasing new versions of CoopBudget.
+This guide covers the process for releasing new versions of Financial Performance Suite.
 
 ## Version Numbering
 
@@ -28,7 +28,7 @@ Update the version in `package.json`:
 
 ```json
 {
-  "name": "coopbudget",
+  "name": "financial-performance-suite",
   "version": "1.1.0",
   ...
 }

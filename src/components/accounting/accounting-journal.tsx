@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -10,64 +10,35 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, Download, Filter, Search } from "lucide-react"
 import { format } from "date-fns"
-import { fr } from "date-fns/locale"
 import { SectionLoading } from "@/components/accounting/section-loading"
-
-const journalEntries = [
-  {
-    id: "1",
-    date: "2024-03-07", // Date actuelle
-    accountNumber: "607", // Votre numéro de compte
-    accountName: "Votre nom de compte",
-    description: "Votre description",
-    debit: 1250.0, // Votre montant
-    credit: 0,
-    type: "charge",
-    analyticalAxis: "Votre Produit",
-  },
-  // Ajoutez vos propres écritures comptables
-]
+import { useFinancialOverview } from "@/hooks/useFinancialOverview"
 
 export function AccountingJournal() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedType, setSelectedType] = useState<string>("all")
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useFinancialOverview()
 
-  // Simulate loading data
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 1500)
+  const filteredEntries = useMemo(() => {
+    return data.entries.filter((entry) => {
+      const matchesSearch =
+        entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.accountNumber.includes(searchTerm) ||
+        entry.accountName.toLowerCase().includes(searchTerm.toLowerCase())
 
-    return () => clearTimeout(timer)
-  }, [])
+      const matchesDate = selectedDate ? entry.date === format(selectedDate, "yyyy-MM-dd") : true
 
-  const filteredEntries = journalEntries.filter((entry) => {
-    const matchesSearch =
-      entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.accountNumber.includes(searchTerm) ||
-      entry.accountName.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesType = selectedType === "all" ? true : selectedType === entry.type
 
-    const matchesDate = selectedDate ? entry.date === format(selectedDate, "yyyy-MM-dd") : true
+      return matchesSearch && matchesDate && matchesType
+    })
+  }, [data.entries, searchTerm, selectedDate, selectedType])
 
-    const matchesType =
-      selectedType === "all" ? true : selectedType === "charge" ? entry.type === "charge" : entry.type === "produit"
-
-    return matchesSearch && matchesDate && matchesType
-  })
-
-  // Simulate loading when filters change
-  const handleFilterChange = () => {
-    setLoading(true)
-    setTimeout(() => setLoading(false), 800)
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <SectionLoading
-        title="Chargement du journal comptable"
-        description="Récupération et analyse des écritures comptables..."
+        title="Loading accounting journal"
+        description="Retrieving ledger entries and analytical mappings."
       />
     )
   }
@@ -79,13 +50,10 @@ export function AccountingJournal() {
           <div className="relative w-full md:w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher..."
+              placeholder="Search entries..."
               className="pl-8"
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value)
-                handleFilterChange()
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
@@ -93,36 +61,27 @@ export function AccountingJournal() {
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-full md:w-auto justify-start">
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "dd MMMM yyyy", { locale: fr }) : "Sélectionner une date"}
+                {selectedDate ? format(selectedDate, "dd MMM yyyy") : "Select date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={(date) => {
-                  setSelectedDate(date)
-                  handleFilterChange()
-                }}
+                onSelect={(date) => setSelectedDate(date)}
                 initialFocus
               />
             </PopoverContent>
           </Popover>
 
-          <Select
-            value={selectedType}
-            onValueChange={(value) => {
-              setSelectedType(value)
-              handleFilterChange()
-            }}
-          >
+          <Select value={selectedType} onValueChange={setSelectedType}>
             <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Type d'opération" />
+              <SelectValue placeholder="Entry type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les types</SelectItem>
-              <SelectItem value="charge">Charges</SelectItem>
-              <SelectItem value="produit">Produits</SelectItem>
+              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="expense">Expenses</SelectItem>
+              <SelectItem value="revenue">Revenue</SelectItem>
             </SelectContent>
           </Select>
 
@@ -133,16 +92,15 @@ export function AccountingJournal() {
               setSearchTerm("")
               setSelectedDate(undefined)
               setSelectedType("all")
-              handleFilterChange()
             }}
           >
             <Filter className="h-4 w-4" />
           </Button>
         </div>
 
-        <Button variant="outline" className="w-full md:w-auto">
+        <Button variant="outline" className="w-full md:w-auto" disabled title="Export available in enterprise tier">
           <Download className="mr-2 h-4 w-4" />
-          Exporter
+          Export
         </Button>
       </div>
 
@@ -151,11 +109,11 @@ export function AccountingJournal() {
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Compte</TableHead>
+              <TableHead>Account</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="text-right">Débit (€)</TableHead>
-              <TableHead className="text-right">Crédit (€)</TableHead>
-              <TableHead>Axe analytique</TableHead>
+              <TableHead className="text-right">Debit</TableHead>
+              <TableHead className="text-right">Credit</TableHead>
+              <TableHead>Analytical axis</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -184,21 +142,19 @@ export function AccountingJournal() {
 
       <div className="flex justify-between items-center border-t pt-4">
         <div>
-          <span className="text-sm font-medium">Total débit: </span>
+          <span className="text-sm font-medium">Total debit: </span>
           <span>
             {filteredEntries
               .reduce((sum, entry) => sum + entry.debit, 0)
-              .toLocaleString(undefined, { minimumFractionDigits: 2 })}{" "}
-            €
+              .toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </span>
         </div>
         <div>
-          <span className="text-sm font-medium">Total crédit: </span>
+          <span className="text-sm font-medium">Total credit: </span>
           <span>
             {filteredEntries
               .reduce((sum, entry) => sum + entry.credit, 0)
-              .toLocaleString(undefined, { minimumFractionDigits: 2 })}{" "}
-            €
+              .toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </span>
         </div>
       </div>

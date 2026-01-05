@@ -3,8 +3,8 @@ import type { Metadata } from "next"
 import { AnalyseBudgetaireNav } from "@/components/analyse-budgetaire/analyse-budgetaire-nav"
 
 export const metadata: Metadata = {
-  title: "Analyse Budgétaire | CoopBudget",
-  description: "Analyse budgétaire automatisée pour votre coopérative",
+  title: "Variance Intelligence | Financial Performance",
+  description: "Analyze operational datasets and surface variance drivers.",
 }
 
 export default function AnalyseBudgetaireLayout({

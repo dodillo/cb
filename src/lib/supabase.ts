@@ -2,7 +2,7 @@ import { createClient as createSupabaseClientInner } from "@supabase/supabase-js
 import type { Database } from "@/types/supabase"
 
 // Function to obtain the configuration
-const getSupabaseConfig = () => {
+export const getSupabaseConfig = () => {
   // Check if we are client-side
   if (typeof window !== "undefined") {
     // Retrieve values from localStorage
@@ -19,6 +19,25 @@ const getSupabaseConfig = () => {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     key: process.env.NEXT_PUBLIC_SUPABASE_KEY || "",
   }
+}
+
+const isPlaceholderValue = (value: string) => {
+  const normalized = value.trim().toLowerCase()
+  return (
+    normalized.length === 0 ||
+    normalized.includes("your-project-id") ||
+    normalized.includes("your-anon-key") ||
+    normalized.includes("your-service-role-key") ||
+    normalized.includes("placeholder")
+  )
+}
+
+export const hasSupabaseConfig = () => {
+  const { url, key } = getSupabaseConfig()
+  if (!url || !key) return false
+  if (!url.startsWith("http")) return false
+  if (isPlaceholderValue(url) || isPlaceholderValue(key)) return false
+  return true
 }
 
 // Create a function to initialize the Supabase client

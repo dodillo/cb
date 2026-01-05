@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide will help you set up CoopBudget for development and production deployment.
+This guide will help you set up Financial Performance Suite for development and production deployment.
 
 ## Development Setup
 
@@ -10,13 +10,13 @@ This guide will help you set up CoopBudget for development and production deploy
 - npm, yarn, or pnpm
 - Git
 - A Supabase account
-- An OpenAI API key (for AI features)
+- A Google Gemini API key (optional for AI features)
 
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/your-username/coopbudget.git
-cd coopbudget
+git clone https://github.com/your-organization/financial-performance-suite.git
+cd financial-performance-suite
 npm install
 ```
 
@@ -31,8 +31,8 @@ cp .env.example .env.local
 Edit `.env.local` with your actual values:
 
 ```env
-# OpenAI API Key
-OPENAI_API_KEY=sk-your-openai-api-key-here
+# Google Gemini API Key (optional)
+GEMINI_API_KEY=your-gemini-api-key-here
 
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
@@ -80,7 +80,7 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
 1. Connect your GitHub repository to Vercel
 2. Add environment variables in Vercel dashboard:
-   - `OPENAI_API_KEY`
+   - `GEMINI_API_KEY`
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
@@ -103,10 +103,10 @@ npm run start
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `OPENAI_API_KEY` | OpenAI API key for AI features | Yes |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
-| `NEXT_PUBLIC_SUPABASE_KEY` | Supabase anonymous key | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Yes |
+| `GEMINI_API_KEY` | Google Gemini API key for AI features | Optional |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Optional (live data) |
+| `NEXT_PUBLIC_SUPABASE_KEY` | Supabase anonymous key | Optional (live data) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Optional (seeding/live data) |
 
 ## Troubleshooting
 
@@ -121,12 +121,13 @@ npm run start
    - Check if Supabase project is active
    - Run migrations: `supabase db push`
 
-3. **OpenAI API errors**
-   - Verify `OPENAI_API_KEY` is correct
-   - Check API quota and billing status
+3. **Gemini API errors**
+   - Verify `GEMINI_API_KEY` is correct
+   - Check API quota and usage limits
+   - Ensure the API key has proper permissions
 
 ### Getting Help
 
 - Check the [README.md](../README.md) for general information
-- Review [GitHub Issues](https://github.com/your-username/coopbudget/issues) for known problems
+- Review GitHub Issues for known problems
 - Create a new issue if you encounter a bug

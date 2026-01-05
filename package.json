@@ -1,10 +1,10 @@
 {
-  "name": "coopbudget",
+  "name": "financial-performance-suite",
   "version": "1.0.0",
-  "description": "A comprehensive budget management platform for cooperatives",
+  "description": "Enterprise budgeting, variance intelligence, and decision support",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

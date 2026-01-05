@@ -8,19 +8,19 @@ import { Skeleton } from "@/components/ui/skeleton"
 export function AnalyseBudgetaireStats() {
   const { analyses, loading } = useAnalyses({ realtime: true })
 
-  // Calculate stats from analyses
   const getStats = () => {
-    if (!analyses.length)
+    if (!analyses.length) {
       return {
         total: 0,
         byType: {
-          ecarts: 0,
-          optimisation: 0,
-          tendances: 0,
+          variance: 0,
+          optimization: 0,
+          trend: 0,
           distribution: 0,
         },
         recentCount: 0,
       }
+    }
 
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -28,12 +28,12 @@ export function AnalyseBudgetaireStats() {
     return {
       total: analyses.length,
       byType: {
-        ecarts: analyses.filter((a) => a.type === "ecarts").length,
-        optimisation: analyses.filter((a) => a.type === "optimisation").length,
-        tendances: analyses.filter((a) => a.type === "tendances").length,
-        distribution: analyses.filter((a) => a.type === "distribution").length,
+        variance: analyses.filter((analysis) => analysis.type === "variance").length,
+        optimization: analyses.filter((analysis) => analysis.type === "optimization").length,
+        trend: analyses.filter((analysis) => analysis.type === "trend").length,
+        distribution: analyses.filter((analysis) => analysis.type === "distribution").length,
       },
-      recentCount: analyses.filter((a) => new Date(a.created_at) > oneWeekAgo).length,
+      recentCount: analyses.filter((analysis) => new Date(analysis.created_at || "") > oneWeekAgo).length,
     }
   }
 
@@ -64,47 +64,47 @@ export function AnalyseBudgetaireStats() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total des analyses</CardTitle>
+          <CardTitle className="text-sm font-medium">Total analyses</CardTitle>
           <BarChart4 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.total}</div>
-          <p className="text-xs text-muted-foreground">{stats.recentCount} nouvelles analyses cette semaine</p>
+          <p className="text-xs text-muted-foreground">{stats.recentCount} new analyses this week</p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Analyses d'écarts</CardTitle>
+          <CardTitle className="text-sm font-medium">Variance intelligence</CardTitle>
           <Calculator className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.byType.ecarts}</div>
+          <div className="text-2xl font-bold">{stats.byType.variance}</div>
           <p className="text-xs text-muted-foreground">
-            {((stats.byType.ecarts / stats.total) * 100 || 0).toFixed(0)}% du total des analyses
+            {((stats.byType.variance / stats.total) * 100 || 0).toFixed(0)}% of total analyses
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Analyses de tendances</CardTitle>
+          <CardTitle className="text-sm font-medium">Trend analysis</CardTitle>
           <LineChart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.byType.tendances}</div>
+          <div className="text-2xl font-bold">{stats.byType.trend}</div>
           <p className="text-xs text-muted-foreground">
-            {((stats.byType.tendances / stats.total) * 100 || 0).toFixed(0)}% du total des analyses
+            {((stats.byType.trend / stats.total) * 100 || 0).toFixed(0)}% of total analyses
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Analyses de distribution</CardTitle>
+          <CardTitle className="text-sm font-medium">Distribution analysis</CardTitle>
           <PieChart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.byType.distribution}</div>
           <p className="text-xs text-muted-foreground">
-            {((stats.byType.distribution / stats.total) * 100 || 0).toFixed(0)}% du total des analyses
+            {((stats.byType.distribution / stats.total) * 100 || 0).toFixed(0)}% of total analyses
           </p>
         </CardContent>
       </Card>

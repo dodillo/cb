@@ -66,6 +66,28 @@ CREATE TABLE IF NOT EXISTS accounting_entries (
   updated_at TIMESTAMP WITH TIME ZONE
 );
 
+-- Scenarios table
+CREATE TABLE IF NOT EXISTS scenarios (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  type TEXT NOT NULL,
+  complexity TEXT NOT NULL,
+  fields JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Scenario results table
+CREATE TABLE IF NOT EXISTS scenario_results (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  scenario_id TEXT NOT NULL REFERENCES scenarios(id) ON DELETE CASCADE,
+  user_id UUID,
+  input_data JSONB NOT NULL,
+  result_data JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Users table (for authentication)
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY REFERENCES auth.users(id),
@@ -82,6 +104,8 @@ ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE costs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE standard_costs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounting_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scenarios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scenario_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for authenticated users

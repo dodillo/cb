@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -11,42 +11,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { toast } from "@/components/ui/use-toast"
+import { baselineProducts } from "@/lib/baseline-data"
 
 const formSchema = z.object({
   productId: z.string({
-    required_error: "Veuillez sélectionner un produit",
+    required_error: "Select a product.",
   }),
   costType: z.enum(["direct", "indirect"], {
-    required_error: "Veuillez sélectionner un type de coût",
+    required_error: "Select a cost type.",
   }),
   costCategory: z.string({
-    required_error: "Veuillez sélectionner une catégorie",
+    required_error: "Select a category.",
   }),
   amount: z.string().refine((val) => !isNaN(Number.parseFloat(val)) && Number.parseFloat(val) > 0, {
-    message: "Le montant doit être un nombre positif",
+    message: "Amount must be a positive number.",
   }),
   date: z.string({
-    required_error: "Veuillez sélectionner une date",
+    required_error: "Select a date.",
   }),
   description: z.string().optional(),
 })
 
-const products = [
-  { id: "prod1", name: "Votre Produit 1" },
-  { id: "prod2", name: "Votre Produit 2" },
-  // Ajoutez vos propres produits
-]
-
 const directCategories = [
-  { id: "cat1", name: "Votre Catégorie 1" },
-  { id: "cat2", name: "Votre Catégorie 2" },
-  // Ajoutez vos propres catégories
+  { id: "cloud", name: "Cloud Infrastructure" },
+  { id: "labor", name: "Delivery Labor" },
+  { id: "licenses", name: "Licensing" },
 ]
 
 const indirectCategories = [
-  { id: "indir1", name: "Votre Catégorie Indirecte 1" },
-  { id: "indir2", name: "Votre Catégorie Indirecte 2" },
-  // Ajoutez vos propres catégories indirectes
+  { id: "security", name: "Security & Compliance" },
+  { id: "overhead", name: "Overhead" },
+  { id: "partner", name: "Partner Fees" },
 ]
 
 export function CostEntryForm() {
@@ -60,11 +55,16 @@ export function CostEntryForm() {
     },
   })
 
+  const products = useMemo(
+    () => baselineProducts.map((product) => ({ id: product.id, name: product.name })),
+    [],
+  )
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
     toast({
-      title: "Coût enregistré",
-      description: `Un coût de ${values.amount}€ a été enregistré pour le ${values.productId}.`,
+      title: "Cost recorded",
+      description: `Captured ${values.amount} USD for ${values.productId}.`,
     })
     form.reset()
   }
@@ -77,11 +77,11 @@ export function CostEntryForm() {
           name="productId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Produit</FormLabel>
+              <FormLabel>Product</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un produit" />
+                    <SelectValue placeholder="Select a product" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -92,7 +92,7 @@ export function CostEntryForm() {
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>Sélectionnez le produit concerné par ce coût</FormDescription>
+              <FormDescription>Assign the cost to a product or business line.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -103,7 +103,7 @@ export function CostEntryForm() {
           name="costType"
           render={({ field }) => (
             <FormItem className="space-y-3">
-              <FormLabel>Type de coût</FormLabel>
+              <FormLabel>Cost type</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={(value: "direct" | "indirect") => {
@@ -118,13 +118,13 @@ export function CostEntryForm() {
                     <FormControl>
                       <RadioGroupItem value="direct" />
                     </FormControl>
-                    <FormLabel className="font-normal">Coût direct</FormLabel>
+                    <FormLabel className="font-normal">Direct</FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-2 space-y-0">
                     <FormControl>
                       <RadioGroupItem value="indirect" />
                     </FormControl>
-                    <FormLabel className="font-normal">Coût indirect</FormLabel>
+                    <FormLabel className="font-normal">Indirect</FormLabel>
                   </FormItem>
                 </RadioGroup>
               </FormControl>
@@ -138,11 +138,11 @@ export function CostEntryForm() {
           name="costCategory"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Catégorie</FormLabel>
+              <FormLabel>Category</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez une catégorie" />
+                    <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -153,7 +153,7 @@ export function CostEntryForm() {
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>Catégorie à laquelle ce coût appartient</FormDescription>
+              <FormDescription>Classify the cost for reporting.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -165,7 +165,7 @@ export function CostEntryForm() {
             name="amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Montant (€)</FormLabel>
+                <FormLabel>Amount (USD)</FormLabel>
                 <FormControl>
                   <Input placeholder="0.00" {...field} />
                 </FormControl>
@@ -194,9 +194,9 @@ export function CostEntryForm() {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description (optionnelle)</FormLabel>
+              <FormLabel>Description (optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Détails supplémentaires sur ce coût..." {...field} />
+                <Textarea placeholder="Add context for this cost entry..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -204,7 +204,7 @@ export function CostEntryForm() {
         />
 
         <Button type="submit" className="w-full md:w-auto">
-          Enregistrer le coût
+          Record cost
         </Button>
       </form>
     </Form>

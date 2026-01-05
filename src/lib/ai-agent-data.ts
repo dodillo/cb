@@ -1,0 +1,431 @@
+import type { AIAgentData } from "@/types/ai-agent"
+
+const anchor = new Date("2025-04-15T12:00:00Z")
+const minutesAgo = (minutes: number) => new Date(anchor.getTime() - minutes * 60_000)
+const hoursAgo = (hours: number) => new Date(anchor.getTime() - hours * 3_600_000)
+const daysAgo = (days: number) => new Date(anchor.getTime() - days * 86_400_000)
+const iso = (value: Date) => value.toISOString()
+
+export const baselineAIAgentData: AIAgentData = {
+  metrics: {
+    automationRate: 72.4,
+    accuracyRate: 93.2,
+    queueLatencyMinutes: 14,
+    savingsIdentified: 1240000,
+  },
+  runs: [
+    {
+      id: "agent-run-1045",
+      name: "Revenue Variance Sweep",
+      owner: "Finance Ops",
+      category: "Variance Monitoring",
+      status: "running",
+      riskLevel: "medium",
+      startedAt: iso(minutesAgo(42)),
+      durationMinutes: 42,
+      dataset: "Revenue Ledger + CRM Pipeline",
+      confidence: 92,
+      savingsImpact: 185000,
+      coveragePercent: 78,
+      summary:
+        "Monitoring the last 30 days of revenue movements across 12 regions. Early signals indicate discount drift in EMEA mid-market accounts.",
+      signals: [
+        {
+          id: "signal-1045-1",
+          level: "warning",
+          title: "Discount band drift",
+          description: "Average discount moved 1.8 points above policy in two territories.",
+        },
+        {
+          id: "signal-1045-2",
+          level: "risk",
+          title: "Channel mix volatility",
+          description: "Partner-led transactions rising faster than direct renewals.",
+        },
+      ],
+      actions: [
+        {
+          id: "action-1045-1",
+          title: "Reinforce approval workflows",
+          description: "Require VP approval for discounts above 12% in EMEA mid-market.",
+          impact: "high",
+        },
+        {
+          id: "action-1045-2",
+          title: "Stabilize renewal cadence",
+          description: "Rebalance renewal coverage toward direct sales pods for top 20 accounts.",
+          impact: "medium",
+        },
+      ],
+      checkpoints: [
+        { id: "checkpoint-1045-1", label: "Ingest ledger and CRM deltas", status: "completed" },
+        { id: "checkpoint-1045-2", label: "Normalize pricing bands", status: "completed" },
+        { id: "checkpoint-1045-3", label: "Score variance drivers", status: "running" },
+        { id: "checkpoint-1045-4", label: "Draft executive summary", status: "queued" },
+      ],
+      coverageBreakdown: [
+        { id: "coverage-1045-1", domain: "Enterprise subscriptions", percent: 82, trend: "up" },
+        { id: "coverage-1045-2", domain: "Mid-market renewals", percent: 74, trend: "down" },
+        { id: "coverage-1045-3", domain: "Partner pipeline", percent: 67, trend: "up" },
+      ],
+    },
+    {
+      id: "agent-run-1044",
+      name: "Cost Drift Sentinel",
+      owner: "Cost Control",
+      category: "Cost Intelligence",
+      status: "review",
+      riskLevel: "high",
+      startedAt: iso(hoursAgo(3)),
+      durationMinutes: 118,
+      dataset: "Procurement + Cloud Spend",
+      confidence: 88,
+      savingsImpact: 310000,
+      coveragePercent: 64,
+      summary:
+        "Detected elevated cloud variance across core platform workloads. Review required for vendor rate changes in the last billing cycle.",
+      signals: [
+        {
+          id: "signal-1044-1",
+          level: "risk",
+          title: "Compute cost acceleration",
+          description: "Compute rates climbed 9.4% due to uncommitted usage.",
+        },
+        {
+          id: "signal-1044-2",
+          level: "warning",
+          title: "Unused reserved capacity",
+          description: "Reserved instances underutilized in two regions.",
+        },
+      ],
+      actions: [
+        {
+          id: "action-1044-1",
+          title: "Renegotiate cloud commitments",
+          description: "Shift 20% of compute load to reserved capacity for Q3.",
+          impact: "high",
+        },
+        {
+          id: "action-1044-2",
+          title: "Tune autoscaling policies",
+          description: "Introduce workload caps on non-production clusters.",
+          impact: "medium",
+        },
+      ],
+      checkpoints: [
+        { id: "checkpoint-1044-1", label: "Validate vendor billing extracts", status: "completed" },
+        { id: "checkpoint-1044-2", label: "Attribute spend to services", status: "completed" },
+        { id: "checkpoint-1044-3", label: "Run variance threshold checks", status: "completed" },
+        { id: "checkpoint-1044-4", label: "Analyst review and approval", status: "running" },
+      ],
+      coverageBreakdown: [
+        { id: "coverage-1044-1", domain: "Cloud infrastructure", percent: 71, trend: "up" },
+        { id: "coverage-1044-2", domain: "Security tooling", percent: 58, trend: "flat" },
+        { id: "coverage-1044-3", domain: "Data pipeline", percent: 62, trend: "up" },
+      ],
+    },
+    {
+      id: "agent-run-1043",
+      name: "Supplier Margin Check",
+      owner: "Procurement",
+      category: "Supplier Analytics",
+      status: "completed",
+      riskLevel: "low",
+      startedAt: iso(hoursAgo(8)),
+      durationMinutes: 54,
+      dataset: "AP Ledger + Supplier Contracts",
+      confidence: 95,
+      savingsImpact: 146000,
+      coveragePercent: 88,
+      summary:
+        "Validated top 25 supplier contracts and identified margin recovery opportunities in logistics and professional services.",
+      signals: [
+        {
+          id: "signal-1043-1",
+          level: "warning",
+          title: "Logistics surcharge variance",
+          description: "Fuel surcharge uplift exceeded contract caps by 2.3%.",
+        },
+      ],
+      actions: [
+        {
+          id: "action-1043-1",
+          title: "Trigger contract compliance audit",
+          description: "Initiate a chargeback on surcharges above contract limits.",
+          impact: "medium",
+        },
+      ],
+      checkpoints: [
+        { id: "checkpoint-1043-1", label: "Refresh supplier master data", status: "completed" },
+        { id: "checkpoint-1043-2", label: "Match invoices to contracts", status: "completed" },
+        { id: "checkpoint-1043-3", label: "Highlight margin recovery items", status: "completed" },
+      ],
+      coverageBreakdown: [
+        { id: "coverage-1043-1", domain: "Logistics", percent: 91, trend: "up" },
+        { id: "coverage-1043-2", domain: "Professional services", percent: 84, trend: "up" },
+        { id: "coverage-1043-3", domain: "Software renewals", percent: 76, trend: "flat" },
+      ],
+    },
+    {
+      id: "agent-run-1042",
+      name: "Working Capital Pulse",
+      owner: "Treasury",
+      category: "Liquidity Monitoring",
+      status: "queued",
+      riskLevel: "medium",
+      startedAt: iso(minutesAgo(5)),
+      durationMinutes: 0,
+      etaMinutes: 22,
+      dataset: "AR/AP Aging + Cash Forecast",
+      confidence: 86,
+      savingsImpact: 90000,
+      coveragePercent: 52,
+      summary:
+        "Queued for liquidity signal refresh across top 120 enterprise accounts. Awaiting latest AR aging snapshot.",
+      signals: [
+        {
+          id: "signal-1042-1",
+          level: "warning",
+          title: "AR aging lag",
+          description: "Snapshot delay exceeds 18 hours for two regions.",
+        },
+      ],
+      actions: [
+        {
+          id: "action-1042-1",
+          title: "Synchronize aging snapshot",
+          description: "Trigger a refresh of AR aging feeds before execution.",
+          impact: "medium",
+        },
+      ],
+      checkpoints: [
+        { id: "checkpoint-1042-1", label: "Verify cash forecast feed", status: "queued" },
+        { id: "checkpoint-1042-2", label: "Reconcile AR/AP aging", status: "queued" },
+        { id: "checkpoint-1042-3", label: "Liquidity scoring", status: "queued" },
+      ],
+      coverageBreakdown: [
+        { id: "coverage-1042-1", domain: "Accounts receivable", percent: 49, trend: "down" },
+        { id: "coverage-1042-2", domain: "Accounts payable", percent: 55, trend: "flat" },
+        { id: "coverage-1042-3", domain: "Cash forecast", percent: 62, trend: "up" },
+      ],
+    },
+    {
+      id: "agent-run-1041",
+      name: "Price Integrity Audit",
+      owner: "Revenue Ops",
+      category: "Pricing Compliance",
+      status: "completed",
+      riskLevel: "low",
+      startedAt: iso(daysAgo(1)),
+      durationMinutes: 37,
+      dataset: "Pricing Catalog + Invoices",
+      confidence: 90,
+      savingsImpact: 78000,
+      coveragePercent: 70,
+      summary:
+        "Confirmed pricing compliance across enterprise renewals. Identified 14 invoices requiring adjustment.",
+      signals: [
+        {
+          id: "signal-1041-1",
+          level: "info",
+          title: "Pricing compliance stable",
+          description: "Variance within 0.6% across reviewed invoices.",
+        },
+      ],
+      actions: [
+        {
+          id: "action-1041-1",
+          title: "Resolve invoice exceptions",
+          description: "Coordinate credit issuance for 14 out-of-policy invoices.",
+          impact: "low",
+        },
+      ],
+      checkpoints: [
+        { id: "checkpoint-1041-1", label: "Validate pricing catalog", status: "completed" },
+        { id: "checkpoint-1041-2", label: "Match invoices to catalog", status: "completed" },
+        { id: "checkpoint-1041-3", label: "Generate exception list", status: "completed" },
+      ],
+      coverageBreakdown: [
+        { id: "coverage-1041-1", domain: "Enterprise renewals", percent: 74, trend: "flat" },
+        { id: "coverage-1041-2", domain: "Upsell contracts", percent: 69, trend: "up" },
+        { id: "coverage-1041-3", domain: "Channel invoicing", percent: 66, trend: "flat" },
+      ],
+    },
+    {
+      id: "agent-run-1040",
+      name: "Sales Plan Reforecast",
+      owner: "Strategic Planning",
+      category: "Forecasting",
+      status: "running",
+      riskLevel: "medium",
+      startedAt: iso(hoursAgo(2)),
+      durationMinutes: 68,
+      dataset: "Pipeline + Bookings",
+      confidence: 87,
+      savingsImpact: 145000,
+      coveragePercent: 61,
+      summary:
+        "Refreshing Q3 revenue plan using current pipeline velocity and win-rate shifts. Interim view shows softening in outbound velocity.",
+      signals: [
+        {
+          id: "signal-1040-1",
+          level: "warning",
+          title: "Pipeline velocity slowdown",
+          description: "Late-stage pipeline conversion slipped 3.2 points.",
+        },
+      ],
+      actions: [
+        {
+          id: "action-1040-1",
+          title: "Rebalance pipeline focus",
+          description: "Increase late-stage coverage with executive sponsor outreach.",
+          impact: "medium",
+        },
+      ],
+      checkpoints: [
+        { id: "checkpoint-1040-1", label: "Ingest pipeline snapshots", status: "completed" },
+        { id: "checkpoint-1040-2", label: "Score win-rate shifts", status: "running" },
+        { id: "checkpoint-1040-3", label: "Refresh quarterly forecast", status: "queued" },
+      ],
+      coverageBreakdown: [
+        { id: "coverage-1040-1", domain: "Enterprise pipeline", percent: 63, trend: "flat" },
+        { id: "coverage-1040-2", domain: "Expansion deals", percent: 58, trend: "down" },
+        { id: "coverage-1040-3", domain: "New logo pipeline", percent: 60, trend: "up" },
+      ],
+    },
+  ],
+  dataSources: [
+    {
+      id: "source-001",
+      name: "General Ledger",
+      system: "SAP S/4HANA",
+      status: "active",
+      lastSync: iso(minutesAgo(12)),
+      records: 3200000,
+      latencyMs: 420,
+      freshnessMinutes: 12,
+    },
+    {
+      id: "source-002",
+      name: "Procurement",
+      system: "Coupa",
+      status: "active",
+      lastSync: iso(minutesAgo(18)),
+      records: 1250000,
+      latencyMs: 510,
+      freshnessMinutes: 18,
+    },
+    {
+      id: "source-003",
+      name: "CRM Pipeline",
+      system: "Salesforce",
+      status: "degraded",
+      lastSync: iso(minutesAgo(35)),
+      records: 540000,
+      latencyMs: 1280,
+      freshnessMinutes: 35,
+    },
+    {
+      id: "source-004",
+      name: "Treasury",
+      system: "Kyriba",
+      status: "active",
+      lastSync: iso(minutesAgo(25)),
+      records: 248000,
+      latencyMs: 670,
+      freshnessMinutes: 25,
+    },
+  ],
+  capabilities: [
+    {
+      id: "capability-001",
+      name: "Variance Anomaly Detection",
+      description: "Detects revenue and cost drift across business units.",
+      maturity: "production",
+      coveragePercent: 88,
+    },
+    {
+      id: "capability-002",
+      name: "Working Capital Forecast",
+      description: "Predicts cash pressure using AR/AP aging and forecasts.",
+      maturity: "pilot",
+      coveragePercent: 62,
+    },
+    {
+      id: "capability-003",
+      name: "Supplier Cost Benchmarking",
+      description: "Flags supplier pricing drift against contracted rates.",
+      maturity: "beta",
+      coveragePercent: 48,
+    },
+    {
+      id: "capability-004",
+      name: "Pricing Compliance Monitoring",
+      description: "Tracks discount and pricing guardrail adherence.",
+      maturity: "production",
+      coveragePercent: 79,
+    },
+    {
+      id: "capability-005",
+      name: "Pipeline Forecasting",
+      description: "Reconciles pipeline velocity to quarterly targets.",
+      maturity: "pilot",
+      coveragePercent: 55,
+    },
+  ],
+  coverage: [
+    { id: "coverage-001", domain: "Revenue", percent: 82, trend: "up" },
+    { id: "coverage-002", domain: "Cost of Goods", percent: 68, trend: "up" },
+    { id: "coverage-003", domain: "Operating Expenses", percent: 74, trend: "flat" },
+    { id: "coverage-004", domain: "Working Capital", percent: 61, trend: "down" },
+    { id: "coverage-005", domain: "Headcount", percent: 57, trend: "flat" },
+  ],
+  throughput: [
+    { label: "Wk 1", runs: 18 },
+    { label: "Wk 2", runs: 21 },
+    { label: "Wk 3", runs: 24 },
+    { label: "Wk 4", runs: 20 },
+    { label: "Wk 5", runs: 26 },
+    { label: "Wk 6", runs: 29 },
+  ],
+  alerts: [
+    {
+      id: "agent-alert-001",
+      level: "risk",
+      title: "High variance exposure",
+      description: "Two regions exceed variance thresholds for five consecutive days.",
+    },
+    {
+      id: "agent-alert-002",
+      level: "warning",
+      title: "Data source degradation",
+      description: "CRM Pipeline feed latency above 30 minutes.",
+    },
+    {
+      id: "agent-alert-003",
+      level: "info",
+      title: "Model coverage expanding",
+      description: "Pipeline forecasting added two new business units this week.",
+    },
+  ],
+  recommendations: [
+    {
+      id: "agent-rec-001",
+      title: "Prioritize discount governance",
+      description: "Reinforce pricing approvals in EMEA mid-market renewals.",
+      impact: "high",
+    },
+    {
+      id: "agent-rec-002",
+      title: "Rebalance cloud commitments",
+      description: "Shift 20% of compute to reserved capacity to reduce overage risk.",
+      impact: "high",
+    },
+    {
+      id: "agent-rec-003",
+      title: "Improve AR aging cadence",
+      description: "Automate nightly snapshots for top 50 enterprise accounts.",
+      impact: "medium",
+    },
+  ],
+}

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts"
 import { Slider } from "@/components/ui/slider"
@@ -11,27 +11,42 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Lightbulb, RefreshCw } from "lucide-react"
 
-export function SimulationTool({ initialParams, data, results }) {
+type SimulationToolProps = {
+  initialParams?: {
+    priceChange?: number
+    quantityChange?: number
+    costChange?: number
+  }
+  data?: unknown
+  results?: unknown
+}
+
+export function SimulationTool({ initialParams }: SimulationToolProps) {
   const [simulationParams, setSimulationParams] = useState({
-    priceChange: 0,
-    quantityChange: 0,
-    costChange: 0,
+    priceChange: initialParams?.priceChange ?? 0,
+    quantityChange: initialParams?.quantityChange ?? 0,
+    costChange: initialParams?.costChange ?? 0,
   })
-  const [simulationResults, setSimulationResults] = useState(null)
-  const [comparisonData, setComparisonData] = useState([])
-  const [optimumFound, setOptimumFound] = useState(null)
+  const [simulationResults, setSimulationResults] = useState<{
+    baseValue: number
+    newValue: number
+    percentChange: number
+    breakdown: {
+      priceEffect: number
+      quantityEffect: number
+      costEffect: number
+    }
+  } | null>(null)
+  const [comparisonData, setComparisonData] = useState<Array<{ name: string; value: number }>>([])
+  const [optimumFound, setOptimumFound] = useState<{ message: string; improvement: number } | null>(null)
 
   useEffect(() => {
-    // Run initial simulation
     runSimulation(simulationParams)
   }, [])
 
-  const runSimulation = (params) => {
-    // This would be a complex calculation based on the data and parameters
-    // For this example, we'll create a simple simulation
-
+  const runSimulation = (params: { priceChange: number; quantityChange: number; costChange: number }) => {
     const baseValue = 10000
-    const priceEffect = baseValue * (params.priceChange / 100) * -1.5 // Assuming price elasticity of -1.5
+    const priceEffect = baseValue * (params.priceChange / 100) * -1.5
     const quantityEffect = baseValue * (params.quantityChange / 100)
     const costEffect = baseValue * (params.costChange / 100) * -1
 
@@ -51,16 +66,14 @@ export function SimulationTool({ initialParams, data, results }) {
 
     setSimulationResults(simulatedResults)
 
-    // Prepare comparison data for chart
     setComparisonData([
-      { name: "Base", value: baseValue },
-      { name: "Simulé", value: newValue },
+      { name: "Baseline", value: baseValue },
+      { name: "Modeled", value: newValue },
     ])
 
-    // Check if we found an optimum
     if (Math.abs(params.priceChange) > 5 && newValue > baseValue * 1.1) {
       setOptimumFound({
-        message: `Une augmentation de ${params.priceChange}% du prix semble optimale`,
+        message: `A ${params.priceChange}% price adjustment appears optimal.`,
         improvement: percentChange,
       })
     } else {
@@ -68,17 +81,17 @@ export function SimulationTool({ initialParams, data, results }) {
     }
   }
 
-  const handleParamChange = (param, value) => {
+  const handleParamChange = (param: "priceChange" | "quantityChange" | "costChange", value: number) => {
     const newParams = { ...simulationParams, [param]: value }
     setSimulationParams(newParams)
     runSimulation(newParams)
   }
 
-  const handleSliderChange = (param, value) => {
+  const handleSliderChange = (param: "priceChange" | "quantityChange" | "costChange", value: number[]) => {
     handleParamChange(param, value[0])
   }
 
-  const handleInputChange = (param, e) => {
+  const handleInputChange = (param: "priceChange" | "quantityChange" | "costChange", e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number.parseFloat(e.target.value) || 0
     handleParamChange(param, value)
   }
@@ -93,15 +106,15 @@ export function SimulationTool({ initialParams, data, results }) {
     runSimulation(resetParams)
   }
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("fr-FR", {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "EUR",
+      currency: "USD",
     }).format(value)
   }
 
-  const formatPercentage = (value) => {
-    return new Intl.NumberFormat("fr-FR", {
+  const formatPercentage = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
       style: "percent",
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
@@ -111,14 +124,14 @@ export function SimulationTool({ initialParams, data, results }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Simulation de scénarios</CardTitle>
-        <CardDescription>Testez différents scénarios pour évaluer leur impact sur vos résultats</CardDescription>
+        <CardTitle>Decision simulation</CardTitle>
+        <CardDescription>Model price, volume, and cost changes to evaluate impact.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Variation de prix</CardTitle>
+              <CardTitle className="text-sm">Price adjustment</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -143,10 +156,10 @@ export function SimulationTool({ initialParams, data, results }) {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {simulationParams.priceChange > 0
-                    ? `Augmentation de ${simulationParams.priceChange}% du prix`
+                    ? `Increase of ${simulationParams.priceChange}%`
                     : simulationParams.priceChange < 0
-                      ? `Réduction de ${Math.abs(simulationParams.priceChange)}% du prix`
-                      : "Aucun changement de prix"}
+                      ? `Decrease of ${Math.abs(simulationParams.priceChange)}%`
+                      : "No price change"}
                 </div>
               </div>
             </CardContent>
@@ -154,7 +167,7 @@ export function SimulationTool({ initialParams, data, results }) {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Variation de quantité</CardTitle>
+              <CardTitle className="text-sm">Volume adjustment</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -179,10 +192,10 @@ export function SimulationTool({ initialParams, data, results }) {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {simulationParams.quantityChange > 0
-                    ? `Augmentation de ${simulationParams.quantityChange}% de la quantité`
+                    ? `Increase of ${simulationParams.quantityChange}%`
                     : simulationParams.quantityChange < 0
-                      ? `Réduction de ${Math.abs(simulationParams.quantityChange)}% de la quantité`
-                      : "Aucun changement de quantité"}
+                      ? `Decrease of ${Math.abs(simulationParams.quantityChange)}%`
+                      : "No volume change"}
                 </div>
               </div>
             </CardContent>
@@ -190,7 +203,7 @@ export function SimulationTool({ initialParams, data, results }) {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Variation de coût</CardTitle>
+              <CardTitle className="text-sm">Cost adjustment</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -215,10 +228,10 @@ export function SimulationTool({ initialParams, data, results }) {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {simulationParams.costChange > 0
-                    ? `Augmentation de ${simulationParams.costChange}% des coûts`
+                    ? `Increase of ${simulationParams.costChange}%`
                     : simulationParams.costChange < 0
-                      ? `Réduction de ${Math.abs(simulationParams.costChange)}% des coûts`
-                      : "Aucun changement de coûts"}
+                      ? `Decrease of ${Math.abs(simulationParams.costChange)}%`
+                      : "No cost change"}
                 </div>
               </div>
             </CardContent>
@@ -230,7 +243,7 @@ export function SimulationTool({ initialParams, data, results }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Résultats de la simulation</CardTitle>
+                  <CardTitle>Simulation results</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -238,17 +251,17 @@ export function SimulationTool({ initialParams, data, results }) {
                       <Table>
                         <TableBody>
                           <TableRow>
-                            <TableCell className="font-medium">Valeur de base</TableCell>
+                            <TableCell className="font-medium">Baseline value</TableCell>
                             <TableCell className="text-right">{formatCurrency(simulationResults.baseValue)}</TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell className="font-medium">Nouvelle valeur</TableCell>
+                            <TableCell className="font-medium">Modeled value</TableCell>
                             <TableCell className="text-right font-bold">
                               {formatCurrency(simulationResults.newValue)}
                             </TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell className="font-medium">Variation</TableCell>
+                            <TableCell className="font-medium">Change</TableCell>
                             <TableCell
                               className={`text-right font-bold ${simulationResults.percentChange >= 0 ? "text-green-600" : "text-red-600"}`}
                             >
@@ -261,12 +274,12 @@ export function SimulationTool({ initialParams, data, results }) {
                     </div>
 
                     <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Décomposition de l'impact</h3>
+                      <h3 className="text-sm font-medium">Impact breakdown</h3>
                       <div className="rounded-md border overflow-hidden">
                         <Table>
                           <TableBody>
                             <TableRow>
-                              <TableCell className="font-medium">Impact du prix</TableCell>
+                              <TableCell className="font-medium">Price impact</TableCell>
                               <TableCell
                                 className={`text-right ${simulationResults.breakdown.priceEffect >= 0 ? "text-green-600" : "text-red-600"}`}
                               >
@@ -275,7 +288,7 @@ export function SimulationTool({ initialParams, data, results }) {
                               </TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell className="font-medium">Impact de la quantité</TableCell>
+                              <TableCell className="font-medium">Volume impact</TableCell>
                               <TableCell
                                 className={`text-right ${simulationResults.breakdown.quantityEffect >= 0 ? "text-green-600" : "text-red-600"}`}
                               >
@@ -284,7 +297,7 @@ export function SimulationTool({ initialParams, data, results }) {
                               </TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell className="font-medium">Impact des coûts</TableCell>
+                              <TableCell className="font-medium">Cost impact</TableCell>
                               <TableCell
                                 className={`text-right ${simulationResults.breakdown.costEffect >= 0 ? "text-green-600" : "text-red-600"}`}
                               >
@@ -302,14 +315,14 @@ export function SimulationTool({ initialParams, data, results }) {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Comparaison</CardTitle>
+                  <CardTitle>Comparison</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
                     <ChartContainer
                       config={{
                         value: {
-                          label: "Valeur",
+                          label: "Value",
                           color: "hsl(var(--chart-1))",
                         },
                       }}
@@ -321,7 +334,7 @@ export function SimulationTool({ initialParams, data, results }) {
                           <YAxis />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Legend />
-                          <Bar dataKey="value" fill="var(--color-value)" name="Valeur" />
+                          <Bar dataKey="value" fill="var(--color-value)" name="Value" />
                         </BarChart>
                       </ResponsiveContainer>
                     </ChartContainer>
@@ -333,10 +346,9 @@ export function SimulationTool({ initialParams, data, results }) {
             {optimumFound && (
               <Alert>
                 <Lightbulb className="h-4 w-4" />
-                <AlertTitle>Optimum détecté</AlertTitle>
+                <AlertTitle>Optimization signal</AlertTitle>
                 <AlertDescription>
-                  {optimumFound.message}, ce qui pourrait améliorer vos résultats de{" "}
-                  {formatPercentage(optimumFound.improvement)}.
+                  {optimumFound.message} Estimated upside: {formatPercentage(optimumFound.improvement)}.
                 </AlertDescription>
               </Alert>
             )}
@@ -346,7 +358,7 @@ export function SimulationTool({ initialParams, data, results }) {
       <CardFooter className="flex justify-end">
         <Button variant="outline" onClick={handleReset} className="mr-2">
           <RefreshCw className="mr-2 h-4 w-4" />
-          Réinitialiser
+          Reset
         </Button>
       </CardFooter>
     </Card>

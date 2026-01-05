@@ -6,7 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
-import { FileUp, BarChart4, LineChart, PieChart, Calculator, Sliders, FileSpreadsheet, FileDown } from "lucide-react"
+import { FileUp, BarChart4, Calculator } from "lucide-react"
 
 interface AnalyseBudgetaireNavProps extends React.HTMLAttributes<HTMLElement> {}
 
@@ -15,44 +15,19 @@ export function AnalyseBudgetaireNav({ className, ...props }: AnalyseBudgetaireN
 
   const items = [
     {
-      title: "Vue d'ensemble",
+      title: "Overview",
       href: "/analyse-budgetaire",
       icon: BarChart4,
     },
     {
-      title: "Importation",
+      title: "Data intake",
       href: "/analyse-budgetaire/importation",
       icon: FileUp,
     },
     {
-      title: "Analyse des écarts",
+      title: "Variance intelligence",
       href: "/analyse-budgetaire/ecarts",
       icon: Calculator,
-    },
-    {
-      title: "Optimisation",
-      href: "/analyse-budgetaire/optimisation",
-      icon: Sliders,
-    },
-    {
-      title: "Tendances",
-      href: "/analyse-budgetaire/tendances",
-      icon: LineChart,
-    },
-    {
-      title: "Distribution",
-      href: "/analyse-budgetaire/distribution",
-      icon: PieChart,
-    },
-    {
-      title: "Rapports",
-      href: "/analyse-budgetaire/rapports",
-      icon: FileSpreadsheet,
-    },
-    {
-      title: "Exportation",
-      href: "/analyse-budgetaire/exportation",
-      icon: FileDown,
     },
   ]
 

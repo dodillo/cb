@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,6 @@ export function SupabaseConfigChecker({ children }: { children: React.ReactNode 
   const [isChecking, setIsChecking] = useState<boolean>(true)
 
   useEffect(() => {
-    // Check if the variables are in localStorage
     const storedUrl = localStorage.getItem("supabase_url")
     const storedKey = localStorage.getItem("supabase_key")
 
@@ -34,14 +33,12 @@ export function SupabaseConfigChecker({ children }: { children: React.ReactNode 
       localStorage.setItem("supabase_url", supabaseUrl)
       localStorage.setItem("supabase_key", supabaseKey)
       setIsConfigured(true)
-
-      // Reload the page to apply the new config
       window.location.reload()
     }
   }
 
   if (isChecking) {
-    return <div className="flex items-center justify-center min-h-screen">Vérification de la configuration...</div>
+    return <div className="flex items-center justify-center min-h-screen">Checking configuration...</div>
   }
 
   if (!isConfigured) {
@@ -49,31 +46,29 @@ export function SupabaseConfigChecker({ children }: { children: React.ReactNode 
       <div className="flex items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Configuration Supabase requise</CardTitle>
-            <CardDescription>
-              Veuillez entrer vos informations d'identification Supabase pour continuer.
-            </CardDescription>
+            <CardTitle>Data connector configuration required</CardTitle>
+            <CardDescription>Enter your data connector credentials to continue.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert variant="destructive">
-              <AlertTitle>Variables d'environnement manquantes</AlertTitle>
+              <AlertTitle>Missing connector variables</AlertTitle>
               <AlertDescription>
-                Les variables d'environnement NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_KEY ne sont pas définies.
+                NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_KEY are not configured.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="supabase-url">URL Supabase</Label>
+              <Label htmlFor="supabase-url">Connector URL</Label>
               <Input
                 id="supabase-url"
-                placeholder="https://votre-projet.supabase.co"
+                placeholder="https://your-project.supabase.co"
                 value={supabaseUrl}
                 onChange={(e) => setSupabaseUrl(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="supabase-key">Clé anonyme Supabase</Label>
+              <Label htmlFor="supabase-key">Connector API key</Label>
               <Input
                 id="supabase-key"
                 placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -81,14 +76,13 @@ export function SupabaseConfigChecker({ children }: { children: React.ReactNode 
                 onChange={(e) => setSupabaseKey(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Vous pouvez trouver ces informations dans les paramètres de votre projet Supabase, sous "Project
-                Settings" &gt; "API".
+                Find these values in your data provider console under API settings.
               </p>
             </div>
           </CardContent>
           <CardFooter>
             <Button onClick={saveConfig} disabled={!supabaseUrl || !supabaseKey}>
-              Enregistrer et continuer
+              Save and continue
             </Button>
           </CardFooter>
         </Card>

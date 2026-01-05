@@ -1,41 +1,38 @@
-# CoopBudget
+# Financial Performance Suite
 
-A comprehensive budget management platform designed for cooperatives. This application provides tools for cost tracking, analytical accounting, budget creation, variance analysis, and financial reporting.
+An enterprise-ready platform for operational budgeting, variance intelligence, scenario modeling, and automated financial insights. The product is designed to support production workflows with baseline data fallback when live integrations are not configured.
 
 ## Features
 
-- **Cost Tracking**: Monitor and analyze cooperative costs
-- **Analytical Accounting**: Manage analytical accounting with ease
-- **Budget Management**: Create and track budget forecasts
-- **Variance Analysis**: Analyze differences between forecasts and actuals
-- **Budget Analysis**: Perform advanced budget analyses
-- **Financial Exercises**: Solve budget management exercises
+- **Operational Data Intake**: Ingest structured datasets via upload, paste, or baseline feeds
+- **Budget & Cost Management**: Track budgets, costs, and accounting entries across lines of business
+- **Variance Intelligence**: Compare planned vs. actual performance with KPI summaries
+- **Scenario Modeling**: Evaluate decision models and optimization outcomes
+- **Automated Financial Intelligence**: Generate executive summaries and action recommendations
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
+- **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **UI Components**: Radix UI
 - **Database**: Supabase (PostgreSQL)
 - **Charts**: Recharts
-- **Forms**: React Hook Form with Zod validation
-- **State Management**: React hooks
-- **Deployment**: Vercel/Netlify ready
+- **Forms**: React Hook Form + Zod
 
 ## Prerequisites
 
 - Node.js 18+
 - npm, yarn, or pnpm
-- Supabase account
-- OpenAI API key (for AI features)
+- Supabase project (optional for baseline mode)
+- Google Gemini API key (optional for AI features)
 
 ## Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/coopbudget.git
-   cd coopbudget
+   git clone https://github.com/your-organization/financial-performance-suite.git
+   cd financial-performance-suite
    ```
 
 2. **Install dependencies**
@@ -47,21 +44,21 @@ A comprehensive budget management platform designed for cooperatives. This appli
    pnpm install
    ```
 
-3. **Environment Setup**
+3. **Environment setup**
    ```bash
    cp .env.example .env.local
    ```
 
    Fill in your environment variables:
-   - `OPENAI_API_KEY`: Your OpenAI API key
-   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-   - `NEXT_PUBLIC_SUPABASE_KEY`: Your Supabase anon key
-   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
+   - `GEMINI_API_KEY`: Google Gemini API key
+   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_KEY`: Supabase anon key
+   - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key
 
-4. **Database Setup**
-   - Create a new Supabase project
-   - Run the migrations in `supabase/migrations/`
-   - Update your environment variables with the Supabase credentials
+4. **Database setup (optional)**
+   - Create a Supabase project
+   - Run migrations in `supabase/migrations/`
+   - Update environment variables with Supabase credentials
 
 5. **Run the development server**
    ```bash
@@ -72,30 +69,22 @@ A comprehensive budget management platform designed for cooperatives. This appli
    pnpm dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+   Open http://localhost:3000 in your browser.
 
 ## Project Structure
 
 ```
-coopbudget/
-├── src/
-│   ├── app/                 # Next.js app router pages
-│   ├── components/          # Reusable UI components
-│   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utility functions and configurations
-│   ├── services/           # API service functions
-│   └── types/              # TypeScript type definitions
-├── assets/                 # Static assets (images, icons, etc.)
-├── docs/                   # Documentation
-├── tests/                  # Test files
-├── supabase/               # Database schema and migrations
-├── .env.example           # Environment variables template
-├── .gitignore             # Git ignore rules
-├── LICENSE                # MIT License
-├── next.config.mjs        # Next.js configuration
-├── package.json           # Dependencies and scripts
-├── tailwind.config.js     # Tailwind CSS configuration
-└── tsconfig.json          # TypeScript configuration
+financial-performance-suite/
+  src/
+    app/                # Next.js app routes
+    components/         # Reusable UI components
+    hooks/              # Data hooks and state helpers
+    lib/                # Services, data, and utilities
+    types/              # TypeScript definitions
+  assets/               # Static assets
+  docs/                 # Documentation
+  tests/                # Tests
+  supabase/             # Database schema and migrations
 ```
 
 ## Available Scripts
@@ -107,12 +96,14 @@ coopbudget/
 
 ## Database Schema
 
-The application uses Supabase with the following main tables:
-- `analyses` - Budget analyses and reports
+Primary tables:
+- `analyses` - Analysis runs and reports
 - `budgets` - Budget definitions and tracking
-- `exercises` - Financial exercises and scenarios
-- `products` - Product catalog
-- `accounting_entries` - Accounting journal entries
+- `costs` - Cost records
+- `standard_costs` - Standard cost benchmarks
+- `products` - Product or service catalog
+- `accounting_entries` - Journal entries
+- `scenarios` - Scenario definitions
 
 ## API Routes
 
@@ -120,28 +111,12 @@ The application uses Supabase with the following main tables:
 - `/api/budgets` - Budget management
 - `/api/products` - Product management
 - `/api/seed` - Database seeding
-- `/api/ai-analysis` - AI-powered analysis
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- `/api/ai-analysis` - Automated financial intelligence
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Support
 
-For support, email support@coopbudget.com or join our Discord community.
-
-## Roadmap
-
-- [ ] Mobile app
-- [ ] Advanced reporting
-- [ ] Multi-language support
-- [ ] Integration with accounting software
-- [ ] Real-time collaboration
+For support, contact support@example.com.

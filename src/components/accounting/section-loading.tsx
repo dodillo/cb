@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { motion } from "framer-motion"
 import {
   BarChart4,
@@ -30,12 +31,42 @@ const financeIcons = [
   Wallet,
 ]
 
+const hashSeed = (value: string) => {
+  let hash = 0
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
+const seededRandom = (seed: number) => {
+  let currentSeed = seed
+  return () => {
+    let t = (currentSeed += 0x6d2b79f5)
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const selectIcons = (seedKey: string) => {
+  const random = seededRandom(hashSeed(seedKey))
+  const icons = [...financeIcons]
+
+  for (let i = icons.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1))
+    ;[icons[i], icons[j]] = [icons[j], icons[i]]
+  }
+
+  return icons.slice(0, 3).map((Icon, index) => ({ Icon, id: index }))
+}
+
 export function SectionLoading({ title, description }: SectionLoadingProps) {
-  // Randomly select 3 icons
-  const selectedIcons = [...financeIcons]
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 3)
-    .map((Icon, index) => ({ Icon, id: index }))
+  const selectedIcons = useMemo(
+    () => selectIcons(`${title}-${description ?? ""}`),
+    [title, description],
+  )
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-6">

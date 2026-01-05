@@ -7,23 +7,21 @@ export default function AnalysisPage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analyse des écarts</h1>
-        <p className="text-muted-foreground">
-          Comparez les budgets prévus avec les résultats réels et analysez les écarts
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">Variance Intelligence</h1>
+        <p className="text-muted-foreground">Track plan vs. actual performance and surface variance drivers.</p>
       </div>
 
       <Tabs defaultValue="variance" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="variance">Analyse des écarts</TabsTrigger>
-          <TabsTrigger value="performance">Performance budgétaire</TabsTrigger>
+          <TabsTrigger value="variance">Variance analysis</TabsTrigger>
+          <TabsTrigger value="performance">Budget performance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="variance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Écarts budgétaires</CardTitle>
-              <CardDescription>Analyse détaillée des écarts entre prévisions et réalisations</CardDescription>
+              <CardTitle>Variance overview</CardTitle>
+              <CardDescription>Detailed variance by category and period.</CardDescription>
             </CardHeader>
             <CardContent>
               <VarianceAnalysis />
@@ -34,8 +32,8 @@ export default function AnalysisPage() {
         <TabsContent value="performance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Performance budgétaire</CardTitle>
-              <CardDescription>Évaluation de la performance des différents budgets</CardDescription>
+              <CardTitle>Budget performance</CardTitle>
+              <CardDescription>Health signals across active budget portfolios.</CardDescription>
             </CardHeader>
             <CardContent>
               <BudgetPerformance />

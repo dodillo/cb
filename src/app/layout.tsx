@@ -9,9 +9,12 @@ import { Footer } from "@/components/footer"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "CoopBudget - Gestion budgétaire pour coopératives",
-  description: "Plateforme de gestion budgétaire conçue pour les coopératives",
-    generator: 'v0.dev'
+  title: "Financial Performance Suite",
+  description: "Enterprise budgeting, variance intelligence, and decision support.",
+  generator: "v0.dev",
+  icons: {
+    icon: "/icon.svg",
+  },
 }
 
 export default function RootLayout({
@@ -20,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr">
+    <html lang="en">
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light">
           <div className="flex h-screen overflow-hidden">

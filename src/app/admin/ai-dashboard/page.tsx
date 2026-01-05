@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AIStats } from "@/components/exercices/ai-stats"
+import { AIUsageStats } from "@/components/scenarios/ai-performance"
 import { Brain, Database, Settings, Users } from "lucide-react"
 
 export default function AIAdminDashboard() {
@@ -14,13 +14,13 @@ export default function AIAdminDashboard() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tableau de bord IA</h1>
-          <p className="text-gray-500">Gérez et surveillez les performances de l'IA pour les exercices budgétaires</p>
+          <h1 className="text-2xl font-bold tracking-tight">Automated Financial Intelligence</h1>
+          <p className="text-gray-500">Monitor Decision Support Engine performance across automated intelligence workflows.</p>
         </div>
 
         <Button>
           <Settings className="h-4 w-4 mr-2" />
-          Paramètres de l'IA
+          Module settings
         </Button>
       </div>
 
@@ -30,7 +30,7 @@ export default function AIAdminDashboard() {
             <div className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-sm text-gray-500">Analyses IA</p>
+                <p className="text-sm text-gray-500">Total analyses</p>
                 <p className="text-2xl font-bold">127</p>
               </div>
             </div>
@@ -42,7 +42,7 @@ export default function AIAdminDashboard() {
             <div className="flex items-center space-x-2">
               <Users className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-sm text-gray-500">Utilisateurs actifs</p>
+                <p className="text-sm text-gray-500">Active analysts</p>
                 <p className="text-2xl font-bold">42</p>
               </div>
             </div>
@@ -54,7 +54,7 @@ export default function AIAdminDashboard() {
             <div className="flex items-center space-x-2">
               <Database className="h-8 w-8 text-purple-500" />
               <div>
-                <p className="text-sm text-gray-500">Exercices analysés</p>
+                <p className="text-sm text-gray-500">Workflows analyzed</p>
                 <p className="text-2xl font-bold">18</p>
               </div>
             </div>
@@ -66,7 +66,7 @@ export default function AIAdminDashboard() {
             <div className="flex items-center space-x-2">
               <Settings className="h-8 w-8 text-amber-500" />
               <div>
-                <p className="text-sm text-gray-500">Taux de précision</p>
+                <p className="text-sm text-gray-500">Accuracy rate</p>
                 <p className="text-2xl font-bold">94.5%</p>
               </div>
             </div>
@@ -76,77 +76,70 @@ export default function AIAdminDashboard() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="stats">Statistiques</TabsTrigger>
-          <TabsTrigger value="models">Modèles IA</TabsTrigger>
-          <TabsTrigger value="feedback">Retours utilisateurs</TabsTrigger>
-          <TabsTrigger value="logs">Journaux d'activité</TabsTrigger>
+          <TabsTrigger value="stats">Usage</TabsTrigger>
+          <TabsTrigger value="models">Models</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
+          <TabsTrigger value="logs">Audit logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="stats" className="mt-0">
-          <AIStats />
+          <AIUsageStats />
         </TabsContent>
 
         <TabsContent value="models" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>Modèles d'IA disponibles</CardTitle>
-              <CardDescription>Configurez les modèles d'IA utilisés pour l'analyse des exercices</CardDescription>
+              <CardTitle>AI model configurations</CardTitle>
+              <CardDescription>Manage the models used for automated financial intelligence.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <Brain className="h-8 w-8 text-blue-500" />
-                    <div>
-                      <p className="font-medium">GPT-4o</p>
-                      <p className="text-sm text-gray-500">Modèle principal pour l'analyse détaillée</p>
+                {[
+                  {
+                    name: "Gemini 1.5 Flash",
+                    description: "Primary model for executive summaries and insight extraction.",
+                    status: "Active",
+                    tone: "success",
+                  },
+                  {
+                    name: "Strategic Advisor",
+                    description: "High-accuracy model for optimization and risk detection.",
+                    status: "Pilot",
+                    tone: "warning",
+                  },
+                  {
+                    name: "Lightweight Analyzer",
+                    description: "Fast model for rapid workflow triage.",
+                    status: "Standby",
+                    tone: "neutral",
+                  },
+                ].map((model) => (
+                  <div key={model.name} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <Brain className="h-8 w-8 text-blue-500" />
+                      <div>
+                        <p className="font-medium">{model.name}</p>
+                        <p className="text-sm text-gray-500">{model.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium mr-2 ${
+                          model.tone === "success"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : model.tone === "warning"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {model.status}
+                      </span>
+                      <Button variant="outline" size="sm">
+                        Configure
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium mr-2">
-                      Actif
-                    </span>
-                    <Button variant="outline" size="sm">
-                      Configurer
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <Brain className="h-8 w-8 text-purple-500" />
-                    <div>
-                      <p className="font-medium">GPT-3.5 Turbo</p>
-                      <p className="text-sm text-gray-500">Modèle rapide pour les analyses simples</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium mr-2">
-                      Inactif
-                    </span>
-                    <Button variant="outline" size="sm">
-                      Configurer
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <Brain className="h-8 w-8 text-amber-500" />
-                    <div>
-                      <p className="font-medium">Modèle spécialisé</p>
-                      <p className="text-sm text-gray-500">Modèle entraîné sur des données financières</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium mr-2">
-                      En test
-                    </span>
-                    <Button variant="outline" size="sm">
-                      Configurer
-                    </Button>
-                  </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -155,41 +148,41 @@ export default function AIAdminDashboard() {
         <TabsContent value="feedback" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>Retours des utilisateurs</CardTitle>
-              <CardDescription>Évaluations et commentaires sur les analyses de l'IA</CardDescription>
+              <CardTitle>Analyst feedback</CardTitle>
+              <CardDescription>Ratings and comments on automated insights.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {[
                   {
-                    user: "Jean D.",
-                    exercise: "Analyse d'écarts",
+                    role: "FP&A Lead",
+                    workflow: "Revenue Variance Run",
                     rating: 5,
-                    comment: "Analyse très précise et détaillée.",
+                    comment: "Executive summary is concise and aligned with our variance drivers.",
                   },
                   {
-                    user: "Marie L.",
-                    exercise: "Optimisation de prix",
+                    role: "Revenue Operations",
+                    workflow: "Price Optimization Run",
                     rating: 4,
-                    comment: "Bonnes recommandations, mais quelques explications manquent de clarté.",
+                    comment: "Optimization insights are strong, add more regional pricing context.",
                   },
                   {
-                    user: "Thomas B.",
-                    exercise: "Budget prévisionnel",
+                    role: "Strategic Planning",
+                    workflow: "Sales Planning Run",
                     rating: 5,
-                    comment: "Exactement ce dont j'avais besoin pour comprendre l'exercice.",
+                    comment: "Recommendations are clear and actionable for quarterly planning.",
                   },
-                ].map((feedback, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
+                ].map((feedback) => (
+                  <div key={feedback.role} className="p-4 border rounded-lg">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium">{feedback.user}</p>
-                        <p className="text-sm text-gray-500">{feedback.exercise}</p>
+                        <p className="font-medium">{feedback.role}</p>
+                        <p className="text-sm text-gray-500">{feedback.workflow}</p>
                       </div>
                       <div className="flex">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <svg
-                            key={i}
+                            key={`${feedback.role}-${i}`}
                             className={`h-5 w-5 ${i < feedback.rating ? "text-yellow-400" : "text-gray-300"}`}
                             fill="currentColor"
                             viewBox="0 0 20 20"
@@ -210,82 +203,72 @@ export default function AIAdminDashboard() {
         <TabsContent value="logs" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>Journaux d'activité</CardTitle>
-              <CardDescription>Historique des analyses effectuées par l'IA</CardDescription>
+              <CardTitle>Audit log</CardTitle>
+              <CardDescription>History of automated intelligence requests.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Utilisateur
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Exercice
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Modèle
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Durée
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Statut
-                      </th>
+                      {["Date", "Analyst", "Workflow", "Model", "Duration", "Status"].map((header) => (
+                        <th
+                          key={header}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {header}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {[
                       {
-                        date: "2023-04-14 14:32",
-                        user: "Jean D.",
-                        exercise: "Atlas Produit A",
-                        model: "GPT-4o",
-                        duration: "3.2s",
+                        date: "2025-04-14 14:32",
+                        analyst: "Finance Ops",
+                        workflow: "Revenue Variance Run",
+                        model: "Gemini 1.5 Flash",
+                        duration: "2.9s",
                         status: "success",
                       },
                       {
-                        date: "2023-04-14 11:15",
-                        user: "Marie L.",
-                        exercise: "Britools Prix",
-                        model: "GPT-4o",
-                        duration: "2.8s",
+                        date: "2025-04-14 11:15",
+                        analyst: "Revenue Ops",
+                        workflow: "Price Optimization Run",
+                        model: "Gemini 1.5 Flash",
+                        duration: "2.4s",
                         status: "success",
                       },
                       {
-                        date: "2023-04-13 16:47",
-                        user: "Thomas B.",
-                        exercise: "Ecopack Budget",
-                        model: "GPT-4o",
-                        duration: "3.5s",
+                        date: "2025-04-13 16:47",
+                        analyst: "Strategic Planning",
+                        workflow: "Sales Planning Run",
+                        model: "Strategic Advisor",
+                        duration: "3.1s",
                         status: "success",
                       },
                       {
-                        date: "2023-04-13 10:22",
-                        user: "Sophie M.",
-                        exercise: "Atlas Produit A",
-                        model: "GPT-4o",
-                        duration: "4.1s",
+                        date: "2025-04-13 10:22",
+                        analyst: "Finance Ops",
+                        workflow: "Revenue Variance Run",
+                        model: "Strategic Advisor",
+                        duration: "4.0s",
                         status: "error",
                       },
-                    ].map((log, index) => (
-                      <tr key={index}>
+                    ].map((log) => (
+                      <tr key={`${log.date}-${log.analyst}`}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.date}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{log.user}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.exercise}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{log.analyst}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.workflow}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.model}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.duration}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              log.status === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                              log.status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
                             }`}
                           >
-                            {log.status === "success" ? "Réussi" : "Échec"}
+                            {log.status === "success" ? "Success" : "Failed"}
                           </span>
                         </td>
                       </tr>

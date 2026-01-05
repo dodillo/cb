@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, BookOpen, Calculator, CreditCard, FileText, Home, Settings } from "lucide-react"
+import { BarChart2, Bot, Calculator, CreditCard, FileText, Home, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function Sidebar() {
@@ -12,37 +12,37 @@ export function Sidebar() {
     {
       href: "/",
       icon: Home,
-      title: "Accueil",
+      title: "Operational Overview",
     },
     {
       href: "/couts",
       icon: Calculator,
-      title: "Suivi des coûts",
+      title: "Cost Structure",
     },
     {
       href: "/comptabilite",
       icon: FileText,
-      title: "Comptabilité",
+      title: "Accounting Intelligence",
     },
     {
       href: "/budgets",
       icon: CreditCard,
-      title: "Budgets",
+      title: "Budget Performance",
     },
     {
       href: "/analyse",
       icon: BarChart2,
-      title: "Analyse des écarts",
+      title: "Variance Intelligence",
     },
     {
       href: "/analyse-budgetaire",
       icon: BarChart2,
-      title: "Analyse Budgétaire",
+      title: "Financial Performance",
     },
     {
-      href: "/exercices-externes",
-      icon: BookOpen,
-      title: "Exercices Externes",
+      href: "/scenarios",
+      icon: Bot,
+      title: "Automated Intelligence",
     },
     {
       href: "/admin",
@@ -54,7 +54,7 @@ export function Sidebar() {
   return (
     <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
       <div className="p-6">
-        <h1 className="text-xl font-bold">CoopBudget</h1>
+        <h1 className="text-xl font-bold">Financial Performance Suite</h1>
       </div>
       <nav className="flex-1 overflow-y-auto">
         <ul className="space-y-1 px-2">
