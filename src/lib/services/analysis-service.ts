@@ -1,10 +1,12 @@
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Database } from "@/types/supabase"
 
 export type Analysis = Database["public"]["Tables"]["analyses"]["Row"]
 export type AnalysisInsert = Database["public"]["Tables"]["analyses"]["Insert"]
 export type AnalysisUpdate = Database["public"]["Tables"]["analyses"]["Update"]
 export type AnalysisTag = Database["public"]["Tables"]["analyses_tags"]["Row"]
+
+const getClient = () => getSupabaseClient()
 
 export const analysisService = {
   // Fetch all analyses with optional filters
@@ -17,6 +19,7 @@ export const analysisService = {
     tags?: string[]
     search?: string
   }) {
+    const supabase = getClient()
     let query = supabase.from("analyses").select(`
         *,
         users (
@@ -72,6 +75,7 @@ export const analysisService = {
 
   // Fetch a single analysis by ID
   async getAnalysisById(id: string) {
+    const supabase = getClient()
     const { data, error } = await supabase
       .from("analyses")
       .select(`
@@ -99,6 +103,7 @@ export const analysisService = {
 
   // Create a new analysis
   async createAnalysis(analysis: AnalysisInsert) {
+    const supabase = getClient()
     const { data, error } = await supabase.from("analyses").insert(analysis).select().single()
 
     if (error) {
@@ -111,6 +116,7 @@ export const analysisService = {
 
   // Update an existing analysis
   async updateAnalysis(id: string, updates: AnalysisUpdate) {
+    const supabase = getClient()
     const { data, error } = await supabase.from("analyses").update(updates).eq("id", id).select().single()
 
     if (error) {
@@ -123,6 +129,7 @@ export const analysisService = {
 
   // Delete an analysis
   async deleteAnalysis(id: string) {
+    const supabase = getClient()
     const { error } = await supabase.from("analyses").delete().eq("id", id)
 
     if (error) {
@@ -135,6 +142,7 @@ export const analysisService = {
 
   // Add tags to an analysis
   async addTagsToAnalysis(analysisId: string, tags: string[]) {
+    const supabase = getClient()
     const tagsToInsert = tags.map((tag) => ({
       analysis_id: analysisId,
       tag,
@@ -152,6 +160,7 @@ export const analysisService = {
 
   // Remove tags from an analysis
   async removeTagsFromAnalysis(analysisId: string, tags: string[]) {
+    const supabase = getClient()
     const { error } = await supabase.from("analyses_tags").delete().eq("analysis_id", analysisId).in("tag", tags)
 
     if (error) {
@@ -164,6 +173,7 @@ export const analysisService = {
 
   // Subscribe to real-time updates for analyses
   subscribeToAnalyses(callback: (payload: any) => void) {
+    const supabase = getClient()
     return supabase
       .channel("analyses-changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "analyses" }, callback)

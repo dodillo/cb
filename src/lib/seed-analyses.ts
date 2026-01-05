@@ -1,7 +1,8 @@
-import { supabaseAdmin } from "./supabase"
+import { getSupabaseAdminClient } from "./supabase"
 import { v4 as uuidv4 } from "uuid"
 
 export async function seedAnalyses() {
+  const supabaseAdmin = getSupabaseAdminClient()
   const { data: users, error: usersError } = await supabaseAdmin.from("users").select("id").limit(4)
 
   if (usersError) {

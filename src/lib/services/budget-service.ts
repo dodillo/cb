@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Database } from "@/types/supabase"
 
 export type Budget = Database["public"]["Tables"]["budgets"]["Row"]
@@ -6,6 +6,7 @@ export type BudgetInsert = Database["public"]["Tables"]["budgets"]["Insert"]
 export type BudgetUpdate = Database["public"]["Tables"]["budgets"]["Update"]
 
 export async function getBudgets(): Promise<Budget[]> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase.from("budgets").select("*").order("created_at", { ascending: false })
 
   if (error) {
@@ -17,6 +18,7 @@ export async function getBudgets(): Promise<Budget[]> {
 }
 
 export async function getBudgetById(id: string): Promise<Budget | null> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase.from("budgets").select("*").eq("id", id).single()
 
   if (error) {
@@ -28,6 +30,7 @@ export async function getBudgetById(id: string): Promise<Budget | null> {
 }
 
 export async function createBudget(budget: BudgetInsert): Promise<Budget> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase.from("budgets").insert([budget]).select().single()
 
   if (error) {
@@ -39,6 +42,7 @@ export async function createBudget(budget: BudgetInsert): Promise<Budget> {
 }
 
 export async function updateBudget(id: string, updates: BudgetUpdate): Promise<Budget> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase.from("budgets").update(updates).eq("id", id).select().single()
 
   if (error) {
@@ -50,6 +54,7 @@ export async function updateBudget(id: string, updates: BudgetUpdate): Promise<B
 }
 
 export async function deleteBudget(id: string): Promise<void> {
+  const supabase = getSupabaseClient()
   const { error } = await supabase.from("budgets").delete().eq("id", id)
 
   if (error) {

@@ -1,7 +1,10 @@
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Scenario, CreateScenarioData, ScenarioResultData } from "@/types/scenarios"
 
+const getClient = () => getSupabaseClient()
+
 export const getScenarios = async (): Promise<Scenario[]> => {
+  const supabase = getClient()
   const { data, error } = await supabase.from("scenarios").select("*").order("created_at", { ascending: false })
 
   if (error) {
@@ -13,6 +16,7 @@ export const getScenarios = async (): Promise<Scenario[]> => {
 }
 
 export const getScenarioById = async (id: string): Promise<Scenario | null> => {
+  const supabase = getClient()
   const { data, error } = await supabase.from("scenarios").select("*").eq("id", id).single()
 
   if (error) {
@@ -24,6 +28,7 @@ export const getScenarioById = async (id: string): Promise<Scenario | null> => {
 }
 
 export const createScenario = async (scenarioData: CreateScenarioData): Promise<Scenario> => {
+  const supabase = getClient()
   const { data, error } = await supabase.from("scenarios").insert(scenarioData).select().single()
 
   if (error) {
@@ -35,6 +40,7 @@ export const createScenario = async (scenarioData: CreateScenarioData): Promise<
 }
 
 export const updateScenario = async (id: string, updates: Partial<CreateScenarioData>): Promise<Scenario> => {
+  const supabase = getClient()
   const { data, error } = await supabase.from("scenarios").update(updates).eq("id", id).select().single()
 
   if (error) {
@@ -46,6 +52,7 @@ export const updateScenario = async (id: string, updates: Partial<CreateScenario
 }
 
 export const deleteScenario = async (id: string): Promise<void> => {
+  const supabase = getClient()
   const { error } = await supabase.from("scenarios").delete().eq("id", id)
 
   if (error) {
@@ -55,6 +62,7 @@ export const deleteScenario = async (id: string): Promise<void> => {
 }
 
 export const saveScenarioResult = async (resultData: ScenarioResultData): Promise<ScenarioResultData> => {
+  const supabase = getClient()
   const { data, error } = await supabase.from("scenario_results").insert(resultData).select().single()
 
   if (error) {
@@ -66,6 +74,7 @@ export const saveScenarioResult = async (resultData: ScenarioResultData): Promis
 }
 
 export const getScenarioResults = async (scenarioId: string): Promise<ScenarioResultData[]> => {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from("scenario_results")
     .select("*")

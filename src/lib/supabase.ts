@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClientInner } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
 
 // Function to obtain the configuration
@@ -40,28 +41,48 @@ export const hasSupabaseConfig = () => {
   return true
 }
 
-// Create a function to initialize the Supabase client
-export const createClient = () => {
-  // If we are server-side, use environment variables
-  if (typeof window === "undefined") {
-    return createSupabaseClientInner<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-      process.env.NEXT_PUBLIC_SUPABASE_KEY || "",
-    )
-  }
+let cachedClient: SupabaseClient<Database> | null = null
+let cachedAdminClient: SupabaseClient<Database> | null = null
 
-  // If we are client-side, use localStorage values
-  const { url, key } = getSupabaseConfig()
-  return createSupabaseClientInner<Database>(url, key)
+const getValidatedConfig = () => {
+  if (!hasSupabaseConfig()) {
+    throw new Error("Supabase configuration is required. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_KEY.")
+  }
+  return getSupabaseConfig()
 }
 
-// Create a client admin with the service role key
-export const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createSupabaseClientInner(process.env.NEXT_PUBLIC_SUPABASE_URL || "", process.env.SUPABASE_SERVICE_ROLE_KEY)
-  : createClient() // Fallback to the standard client if the service role key is not available
+export const getSupabaseClient = () => {
+  if (cachedClient) return cachedClient
+  const { url, key } = getValidatedConfig()
+  cachedClient = createSupabaseClientInner<Database>(url, key)
+  return cachedClient
+}
+
+export const getSupabaseAdminClient = () => {
+  if (cachedAdminClient) return cachedAdminClient
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    cachedAdminClient = getSupabaseClient()
+    return cachedAdminClient
+  }
+
+  if (!hasSupabaseConfig()) {
+    throw new Error("Supabase configuration is required. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_KEY.")
+  }
+
+  cachedAdminClient = createSupabaseClientInner<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+  )
+  return cachedAdminClient
+}
 
 // Helper function to get server-side supabase client with auth context
 export const createServerSupabaseClient = async () => {
+  if (!hasSupabaseConfig()) {
+    throw new Error("Supabase configuration is required. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_KEY.")
+  }
+
   const { cookies } = await import("next/headers")
   const cookieStore = cookies()
 
@@ -77,5 +98,3 @@ export const createServerSupabaseClient = async () => {
     },
   )
 }
-
-export const supabase = createClient()

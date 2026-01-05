@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Database } from "@/types/supabase"
 
 export type Cost = Database["public"]["Tables"]["costs"]["Row"]
@@ -9,8 +9,11 @@ export type StandardCost = Database["public"]["Tables"]["standard_costs"]["Row"]
 export type StandardCostInsert = Database["public"]["Tables"]["standard_costs"]["Insert"]
 export type StandardCostUpdate = Database["public"]["Tables"]["standard_costs"]["Update"]
 
+const getClient = () => getSupabaseClient()
+
 // Regular costs
 export async function getCosts(): Promise<Cost[]> {
+  const supabase = getClient()
   const { data, error } = await supabase.from("costs").select("*, products(name)").order("date", { ascending: false })
 
   if (error) {
@@ -22,6 +25,7 @@ export async function getCosts(): Promise<Cost[]> {
 }
 
 export async function getCostsByProduct(productId: string): Promise<Cost[]> {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from("costs")
     .select("*, products(name)")
@@ -37,6 +41,7 @@ export async function getCostsByProduct(productId: string): Promise<Cost[]> {
 }
 
 export async function createCost(cost: CostInsert): Promise<Cost> {
+  const supabase = getClient()
   const { data, error } = await supabase.from("costs").insert([cost]).select("*, products(name)").single()
 
   if (error) {
@@ -48,6 +53,7 @@ export async function createCost(cost: CostInsert): Promise<Cost> {
 }
 
 export async function updateCost(id: string, updates: CostUpdate): Promise<Cost> {
+  const supabase = getClient()
   const { data, error } = await supabase.from("costs").update(updates).eq("id", id).select("*, products(name)").single()
 
   if (error) {
@@ -59,6 +65,7 @@ export async function updateCost(id: string, updates: CostUpdate): Promise<Cost>
 }
 
 export async function deleteCost(id: string): Promise<void> {
+  const supabase = getClient()
   const { error } = await supabase.from("costs").delete().eq("id", id)
 
   if (error) {
@@ -69,6 +76,7 @@ export async function deleteCost(id: string): Promise<void> {
 
 // Standard costs
 export async function getStandardCosts(): Promise<StandardCost[]> {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from("standard_costs")
     .select("*, products(name)")
@@ -83,6 +91,7 @@ export async function getStandardCosts(): Promise<StandardCost[]> {
 }
 
 export async function createStandardCost(standardCost: StandardCostInsert): Promise<StandardCost> {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from("standard_costs")
     .insert([standardCost])
@@ -98,6 +107,7 @@ export async function createStandardCost(standardCost: StandardCostInsert): Prom
 }
 
 export async function updateStandardCost(id: string, updates: StandardCostUpdate): Promise<StandardCost> {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from("standard_costs")
     .update(updates)
@@ -114,6 +124,7 @@ export async function updateStandardCost(id: string, updates: StandardCostUpdate
 }
 
 export async function deleteStandardCost(id: string): Promise<void> {
+  const supabase = getClient()
   const { error } = await supabase.from("standard_costs").delete().eq("id", id)
 
   if (error) {

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase"
+import { getSupabaseAdminClient } from "@/lib/supabase"
 
 export async function seedDatabase() {
   try {
@@ -22,6 +22,7 @@ export async function seedDatabase() {
 async function clearExistingData() {
   console.log("Clearing existing data...")
 
+  const supabaseAdmin = getSupabaseAdminClient()
   await supabaseAdmin.from("accounting_entries").delete().neq("id", "00000000-0000-0000-0000-000000000000")
   await supabaseAdmin.from("standard_costs").delete().neq("id", "00000000-0000-0000-0000-000000000000")
   await supabaseAdmin.from("costs").delete().neq("id", "00000000-0000-0000-0000-000000000000")
@@ -32,6 +33,7 @@ async function clearExistingData() {
 async function seedProducts() {
   console.log("Seeding products...")
 
+  const supabaseAdmin = getSupabaseAdminClient()
   const products = [
     { name: "Core Platform", description: "Primary subscription line" },
     { name: "Managed Services", description: "Operational support services" },
@@ -50,6 +52,7 @@ async function seedProducts() {
 async function seedBudgets() {
   console.log("Seeding budgets...")
 
+  const supabaseAdmin = getSupabaseAdminClient()
   const currentYear = new Date().getFullYear()
 
   const budgets = [
@@ -101,6 +104,7 @@ async function seedBudgets() {
 async function seedCosts(products: any[]) {
   console.log("Seeding costs...")
 
+  const supabaseAdmin = getSupabaseAdminClient()
   if (!products || products.length === 0) {
     throw new Error("No products available for seeding costs")
   }
@@ -144,6 +148,7 @@ async function seedCosts(products: any[]) {
 async function seedStandardCosts(products: any[]) {
   console.log("Seeding standard costs...")
 
+  const supabaseAdmin = getSupabaseAdminClient()
   if (!products || products.length === 0) {
     throw new Error("No products available for seeding standard costs")
   }
@@ -184,6 +189,7 @@ async function seedStandardCosts(products: any[]) {
 async function seedAccountingEntries() {
   console.log("Seeding accounting entries...")
 
+  const supabaseAdmin = getSupabaseAdminClient()
   const today = new Date().toISOString().split("T")[0]
 
   const entries = [

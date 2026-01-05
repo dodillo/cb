@@ -1,11 +1,14 @@
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Database } from "@/types/supabase"
 
 export type AccountingEntry = Database["public"]["Tables"]["accounting_entries"]["Row"]
 export type AccountingEntryInsert = Database["public"]["Tables"]["accounting_entries"]["Insert"]
 export type AccountingEntryUpdate = Database["public"]["Tables"]["accounting_entries"]["Update"]
 
+const getClient = () => getSupabaseClient()
+
 export async function getAccountingEntries(): Promise<AccountingEntry[]> {
+  const supabase = getClient()
   const { data, error } = await supabase.from("accounting_entries").select("*").order("date", { ascending: false })
 
   if (error) {
@@ -17,6 +20,7 @@ export async function getAccountingEntries(): Promise<AccountingEntry[]> {
 }
 
 export async function getAccountingEntriesByType(type: string): Promise<AccountingEntry[]> {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from("accounting_entries")
     .select("*")
@@ -32,6 +36,7 @@ export async function getAccountingEntriesByType(type: string): Promise<Accounti
 }
 
 export async function createAccountingEntry(entry: AccountingEntryInsert): Promise<AccountingEntry> {
+  const supabase = getClient()
   const { data, error } = await supabase.from("accounting_entries").insert([entry]).select().single()
 
   if (error) {
@@ -43,6 +48,7 @@ export async function createAccountingEntry(entry: AccountingEntryInsert): Promi
 }
 
 export async function updateAccountingEntry(id: string, updates: AccountingEntryUpdate): Promise<AccountingEntry> {
+  const supabase = getClient()
   const { data, error } = await supabase.from("accounting_entries").update(updates).eq("id", id).select().single()
 
   if (error) {
@@ -54,6 +60,7 @@ export async function updateAccountingEntry(id: string, updates: AccountingEntry
 }
 
 export async function deleteAccountingEntry(id: string): Promise<void> {
+  const supabase = getClient()
   const { error } = await supabase.from("accounting_entries").delete().eq("id", id)
 
   if (error) {
